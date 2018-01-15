@@ -7,57 +7,43 @@ import asyncio
 import sys
 
 
-class BaseValueAdjustor(object):
-    def __init__(self, hass, entity_id, state_image):
+class BaseHassTile(object):
+    def __init__(self, hass, entity_id, state_images, show_value=False):
         self.hass         = hass
         self.entity_id    = entity_id
-        self.image        = state_image
+        self.state_images = state_images
+        self.show_value   = show_value
         self.old_state    = None
 
-    async def get_image(self, force=True):
-        state = await self.hass.get_state(self.entity_id)
+    def get_state(self):
+        return self.hass.get_state(self.entity_id)
 
+    async def get_image(self, force=True):
+        state = await self.get_state()
         if state == self.old_state and not force:
             return None
-        else:
-            self.old_state = state
 
-        self.image.set_value(state)
-        return self.image
+        self.old_state = state
+
+        image = self.state_images.get(state, self.state_images[None])
+        if self.show_value:
+            image.set_value(state)
+
+        return image
 
     async def button_state_changed(self, state):
         pass
 
 
-class BaseToggleAdjustor(object):
-    def __init__(self, hass, entity_id, state_images):
-        self.hass         = hass
-        self.entity_id    = entity_id
-        self.state_images = state_images
-        self.old_state    = None
-
-    async def get_image(self, force=True):
-        state = await self.hass.get_state(self.entity_id)
-
-        if state == self.old_state and not force:
-            return None
-        else:
-            self.old_state = state
-
-        return self.state_images.get(state, self.state_images[None])
-
-    async def button_state_changed(self, state):
-        if state is True:
-            await self.hass.set_state(domain='homeassistant', service='toggle', entity_id=self.entity_id)
-
-
-class ValueAdjustor(BaseValueAdjustor):
+class ValueHassTile(BaseHassTile):
     def __init__(self, hass, image_dimensions, entity_id, name):
-        state_image = ColorTile(image_dimensions, (0, 0, 0), name)
-        super().__init__(hass, entity_id, state_image)
+        state_images = {
+            None: ColorTile(image_dimensions, (0, 0, 0), name),
+        }
+        super().__init__(hass, entity_id, state_images, show_value=True)
 
 
-class LightAdjustor(BaseToggleAdjustor):
+class LightHassTile(BaseHassTile):
     def __init__(self, hass, image_dimensions, entity_id, name):
         state_images = {
             'on': ImageTile(image_dimensions, 'Assets/light_on.png', name),
@@ -65,14 +51,26 @@ class LightAdjustor(BaseToggleAdjustor):
         }
         super().__init__(hass, entity_id, state_images)
 
+    async def button_state_changed(self, state):
+        await super().button_state_changed(state)
 
-class AutomationAdjustor(BaseToggleAdjustor):
+        if state is True:
+            await self.hass.set_state(domain='homeassistant', service='toggle', entity_id=self.entity_id)
+
+
+class AutomationHassTile(BaseHassTile):
     def __init__(self, hass, image_dimensions, entity_id, name):
         state_images = {
             'on': ImageTile(image_dimensions, 'Assets/automation_on.png', name),
             None: ImageTile(image_dimensions, 'Assets/automation_off.png', name),
         }
         super().__init__(hass, entity_id, state_images)
+
+    async def button_state_changed(self, state):
+        await super().button_state_changed(state)
+
+        if state is True:
+            await self.hass.set_state(domain='homeassistant', service='toggle', entity_id=self.entity_id)
 
 
 class DeckPageManager(object):
@@ -126,12 +124,12 @@ async def main(loop):
 
     deck_pages = {
         'home': {
-            (0, 0): LightAdjustor(hass, image_dimensions,      'group.study_lights',       'Study'),
-            (0, 1): LightAdjustor(hass, image_dimensions,      'light.mr_ed',              'Mr Ed'),
-            (1, 1): LightAdjustor(hass, image_dimensions,      'light.desk_lamp',          'Desk Lamp'),
-            (2, 1): LightAdjustor(hass, image_dimensions,      'light.study_bias',         'Bias Light'),
-            (3, 1): AutomationAdjustor(hass, image_dimensions, 'group.study_automations',  'Auto Dim'),
-            (4, 1): ValueAdjustor(hass, image_dimensions,      'sensor.study_temperature', 'Study\nTemp')
+            (0, 0): LightHassTile(hass, image_dimensions,      'group.study_lights',       'Study'),
+            (0, 1): LightHassTile(hass, image_dimensions,      'light.mr_ed',              'Mr Ed'),
+            (1, 1): LightHassTile(hass, image_dimensions,      'light.desk_lamp',          'Desk Lamp'),
+            (2, 1): LightHassTile(hass, image_dimensions,      'light.study_bias',         'Bias Light'),
+            (3, 1): AutomationHassTile(hass, image_dimensions, 'group.study_automations',  'Auto Dim'),
+            (4, 1): ValueHassTile(hass, image_dimensions,      'sensor.study_temperature', 'Study\nTemp')
         }
     }
     deck_page_manager = DeckPageManager(deck, deck_pages)
