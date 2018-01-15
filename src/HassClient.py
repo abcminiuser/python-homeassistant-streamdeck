@@ -98,7 +98,7 @@ class DeckPageManager(object):
 
                 if adjustor is not None:
                     button_image = await adjustor.get_image(force=force)
-                elif not force:
+                elif force:
                     button_image = self.null_button_image
                 else:
                     button_image = None
