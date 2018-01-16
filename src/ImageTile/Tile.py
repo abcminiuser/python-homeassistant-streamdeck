@@ -1,3 +1,10 @@
+#   Python StreamDeck HomeAssistant Client
+#      Released under the MIT license
+#
+#   dean [at] fourwalledcubicle [dot] com
+#         www.fourwalledcubicle.com
+#
+
 from PIL import Image, ImageFilter, ImageDraw, ImageFont
 
 

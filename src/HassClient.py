@@ -1,5 +1,13 @@
 #!/usr/bin/env python
 
+#   Python StreamDeck HomeAssistant Client
+#      Released under the MIT license
+#
+#   dean [at] fourwalledcubicle [dot] com
+#         www.fourwalledcubicle.com
+#
+
+
 from StreamDeck.StreamDeck import DeviceManager
 from HomeAssistantWS.RemoteWS import HomeAssistantWS
 from ImageTile.Tile import ColorTile, ImageTile

@@ -1,3 +1,10 @@
+#   Python StreamDeck HomeAssistant Client
+#      Released under the MIT license
+#
+#   dean [at] fourwalledcubicle [dot] com
+#         www.fourwalledcubicle.com
+#
+
 import asyncio
 import asyncws
 import json
