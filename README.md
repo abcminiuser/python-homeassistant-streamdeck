@@ -8,7 +8,7 @@ via an [Elgato Stream Deck](https://www.elgato.com/en/gaming/stream-deck). This
 client is designed to be able to run run cross-platform, so that the StreamDeck
 can be connected to both full PCs as well as stand-alone Raspberry Pis.
 
-Unlike the official Elgate client, which can be made to integrate with Home
+Unlike the official software client, which can be made to integrate with Home
 Assistant via it's "Open Website" command macros, this client supports dynamic
 updates of the button images to reflect the current entity states.
 
