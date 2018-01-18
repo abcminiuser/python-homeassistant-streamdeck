@@ -16,11 +16,11 @@ import sys
 
 
 class BaseHassTile(object):
-    def __init__(self, hass, deck, entity_id, state_images):
+    def __init__(self, hass, deck, entity_id, state_tiles):
         self.hass = hass
         self.deck = deck
         self.entity_id = entity_id
-        self.state_images = state_images
+        self.state_tiles = state_tiles
         self.old_state = None
 
     def get_state(self):
@@ -34,14 +34,15 @@ class BaseHassTile(object):
         self.old_state = state
 
         image_format = self.deck.key_image_format()
+        image_dimensions = (image_format['width'], image_format['height'])
 
-        state_image = self.state_images.get(state, self.state_images[None])
+        state_tile = self.state_tiles.get(state, self.state_tiles[None])
 
-        image = ImageTile(dimensions = (image_format['width'], image_format['height']))
-        image.color = state_image.get('color')
-        image.label = state_image.get('label')
-        image.overlay = state_image.get('overlay')
-        image.value = state if state_image.get('value', False) is True else state_image.get('value')
+        image = ImageTile(dimensions=image_dimensions)
+        image.color = state_tile.get('color')
+        image.label = state_tile.get('label')
+        image.overlay = state_tile.get('overlay')
+        image.value = state if state_tile.get('value', False) is True else state_tile.get('value')
 
         return image
 
@@ -51,19 +52,19 @@ class BaseHassTile(object):
 
 class ValueHassTile(BaseHassTile):
     def __init__(self, hass, deck, entity_id, name):
-        state_images = {
+        state_tiles = {
             None: {'label': name, 'value': True},
         }
-        super().__init__(hass, deck, entity_id, state_images)
+        super().__init__(hass, deck, entity_id, state_tiles)
 
 
 class LightHassTile(BaseHassTile):
     def __init__(self, hass, deck, entity_id, name):
-        state_images = {
+        state_tiles = {
             'on': {'label': name, 'overlay': 'Assets/light_on.png'},
             None: {'label': name, 'overlay': 'Assets/light_off.png'},
         }
-        super().__init__(hass, deck, entity_id, state_images)
+        super().__init__(hass, deck, entity_id, state_tiles)
 
     async def button_state_changed(self, state):
         await super().button_state_changed(state)
@@ -74,11 +75,11 @@ class LightHassTile(BaseHassTile):
 
 class AutomationHassTile(BaseHassTile):
     def __init__(self, hass, deck, entity_id, name):
-        state_images = {
+        state_tiles = {
             'on': {'label': name, 'overlay': 'Assets/automation_on.png'},
             None: {'label': name, 'overlay': 'Assets/automation_off.png'},
         }
-        super().__init__(hass, deck, entity_id, state_images)
+        super().__init__(hass, deck, entity_id, state_tiles)
 
     async def button_state_changed(self, state):
         await super().button_state_changed(state)
