@@ -10,17 +10,17 @@
 
 from StreamDeck.StreamDeck import DeviceManager
 from HomeAssistantWS.RemoteWS import HomeAssistantWS
-from ImageTile.Tile import ColorTile, ImageTile
+from ImageTile.Tile import ImageTile
 import asyncio
 import sys
 
 
 class BaseHassTile(object):
-    def __init__(self, hass, entity_id, state_images, show_value=False):
+    def __init__(self, hass, deck, entity_id, state_images):
         self.hass = hass
+        self.deck = deck
         self.entity_id = entity_id
         self.state_images = state_images
-        self.show_value = show_value
         self.old_state = None
 
     def get_state(self):
@@ -33,9 +33,15 @@ class BaseHassTile(object):
 
         self.old_state = state
 
-        image = self.state_images.get(state, self.state_images[None])
-        if self.show_value:
-            image.set_value(state)
+        image_format = self.deck.key_image_format()
+
+        state_image = self.state_images.get(state, self.state_images[None])
+
+        image = ImageTile(dimensions = (image_format['width'], image_format['height']))
+        image.color = state_image.get('color')
+        image.label = state_image.get('label')
+        image.overlay = state_image.get('overlay')
+        image.value = state if state_image.get('value', False) is True else state_image.get('value')
 
         return image
 
@@ -44,20 +50,20 @@ class BaseHassTile(object):
 
 
 class ValueHassTile(BaseHassTile):
-    def __init__(self, hass, image_dimensions, entity_id, name):
+    def __init__(self, hass, deck, entity_id, name):
         state_images = {
-            None: ColorTile(image_dimensions, (0, 0, 0), name),
+            None: {'label': name, 'value': True},
         }
-        super().__init__(hass, entity_id, state_images, show_value=True)
+        super().__init__(hass, deck, entity_id, state_images)
 
 
 class LightHassTile(BaseHassTile):
-    def __init__(self, hass, image_dimensions, entity_id, name):
+    def __init__(self, hass, deck, entity_id, name):
         state_images = {
-            'on': ImageTile(image_dimensions, 'Assets/light_on.png', name),
-            None: ImageTile(image_dimensions, 'Assets/light_off.png', name),
+            'on': {'label': name, 'overlay': 'Assets/light_on.png'},
+            None: {'label': name, 'overlay': 'Assets/light_off.png'},
         }
-        super().__init__(hass, entity_id, state_images)
+        super().__init__(hass, deck, entity_id, state_images)
 
     async def button_state_changed(self, state):
         await super().button_state_changed(state)
@@ -67,12 +73,12 @@ class LightHassTile(BaseHassTile):
 
 
 class AutomationHassTile(BaseHassTile):
-    def __init__(self, hass, image_dimensions, entity_id, name):
+    def __init__(self, hass, deck, entity_id, name):
         state_images = {
-            'on': ImageTile(image_dimensions, 'Assets/automation_on.png', name),
-            None: ImageTile(image_dimensions, 'Assets/automation_off.png', name),
+            'on': {'label': name, 'overlay': 'Assets/automation_on.png'},
+            None: {'label': name, 'overlay': 'Assets/automation_off.png'},
         }
-        super().__init__(hass, entity_id, state_images)
+        super().__init__(hass, deck, entity_id, state_images)
 
     async def button_state_changed(self, state):
         await super().button_state_changed(state)
@@ -90,7 +96,7 @@ class DeckPageManager(object):
         self.key_layout = self.deck.key_layout()
         self.pages = pages
         self.current_page = None
-        self.null_button_image = ColorTile(image_dimensions, (0, 0, 0))
+        self.empty_tile = ImageTile(dimensions=image_dimensions)
 
     async def set_deck_page(self, name):
         self.current_page = self.pages.get(name, self.pages['home'])
@@ -98,6 +104,9 @@ class DeckPageManager(object):
 
     async def update_page(self, force=True):
         rows, cols = self.key_layout
+
+        image_format = self.deck.key_image_format()
+        image_dimensions = (image_format['width'], image_format['height'])
 
         for y in range(rows):
             for x in range(cols):
@@ -107,7 +116,7 @@ class DeckPageManager(object):
                 if adjustor is not None:
                     button_image = await adjustor.get_image(force=force)
                 elif force:
-                    button_image = self.null_button_image
+                    button_image = self.empty_tile
                 else:
                     button_image = None
 
@@ -127,19 +136,16 @@ async def main(loop):
     deck = DeviceManager().enumerate()[0]
     hass = HomeAssistantWS('192.168.1.104')
 
-    image_format = deck.key_image_format()
-    image_dimensions = (image_format['width'], image_format['height'])
-
     deck_pages = {
         'home': {
-            (0, 0): LightHassTile(hass, image_dimensions, 'group.study_lights', 'Study'),
-            (0, 1): LightHassTile(hass, image_dimensions, 'light.mr_ed', 'Mr Ed'),
-            (1, 1): LightHassTile(hass, image_dimensions, 'light.desk_lamp', 'Desk Lamp'),
-            (2, 1): LightHassTile(hass, image_dimensions, 'light.study_bias', 'Bias Light'),
-            (3, 1): AutomationHassTile(hass, image_dimensions, 'group.study_automations', 'Auto Dim'),
-            (2, 2): ValueHassTile(hass, image_dimensions, 'sensor.living_room_temperature', 'Lvng Rm\nTemp'),
-            (3, 2): ValueHassTile(hass, image_dimensions, 'sensor.bedroom_temperature', 'Bedroom\nTemp'),
-            (4, 2): ValueHassTile(hass, image_dimensions, 'sensor.study_temperature', 'Study\nTemp'),
+            (0, 0): LightHassTile(hass, deck, 'group.study_lights', 'Study'),
+            (0, 1): LightHassTile(hass, deck, 'light.mr_ed', 'Mr Ed'),
+            (1, 1): LightHassTile(hass, deck, 'light.desk_lamp', 'Desk Lamp'),
+            (2, 1): LightHassTile(hass, deck, 'light.study_bias', 'Bias Light'),
+            (3, 1): AutomationHassTile(hass, deck, 'group.study_automations', 'Auto Dim'),
+            (2, 2): ValueHassTile(hass, deck, 'sensor.living_room_temperature', 'Lvng Rm\nTemp'),
+            (3, 2): ValueHassTile(hass, deck, 'sensor.bedroom_temperature', 'Bedroom\nTemp'),
+            (4, 2): ValueHassTile(hass, deck, 'sensor.study_temperature', 'Study\nTemp'),
         }
     }
     deck_page_manager = DeckPageManager(deck, deck_pages)
@@ -158,7 +164,6 @@ async def main(loop):
 
     await deck_page_manager.set_deck_page(None)
     await hass.subscribe_to_event('state_changed', hass_state_changed)
-
 
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()

@@ -8,78 +8,121 @@
 from PIL import Image, ImageDraw, ImageFont
 
 
-class BaseTile(object):
-    def __init__(self, base_image, label=None, value=None):
-        self.base_image = base_image
-        self.image = base_image
-        self.label = label
-        self.value = value
-        self.pixels = None
+class ImageTile(object):
+    def __init__(self, dimensions=(1, 1)):
+        self._pixels = None
+        self._overlay_image = None
 
-    def _pixels(self):
-        for y in range(self.image.height):
-            for x in range(self.image.width):
-                colour = self.image.getpixel((self.image.width - x - 1, y))
-                yield colour[2]
-                yield colour[1]
-                yield colour[0]
+        self.dimensions = dimensions
+        self.color = (0, 0, 0)
+        self.overlay = None
+        self.label = None
+        self.value = None
 
-    def _draw_label(self):
-        if self.label is None:
+    @property
+    def dimensions(self):
+        return self._dimensions
+
+    @property
+    def color(self):
+        return self._color
+
+    @property
+    def overlay(self):
+        return self._overlay
+
+    @property
+    def label(self, text):
+        return self._label
+
+    @property
+    def value(self):
+        return self._value
+
+    @dimensions.setter
+    def dimensions(self, size):
+        self._dimensions = size
+        self._overlay_image = None
+        self._pixels = None
+
+    @color.setter
+    def color(self, value):
+        self._color = value
+        self._pixels = None
+
+    @overlay.setter
+    def overlay(self, overlay):
+        self._overlay = overlay
+        self._overlay_image = None
+        self._pixels = None
+
+    @label.setter
+    def label(self, text):
+        self._label = text
+        self._pixels = None
+
+    @value.setter
+    def value(self, value):
+        self._value = value
+        self._pixels = None
+
+    def _get_background(self):
+        return Image.new("RGB", self._dimensions, self._color)
+
+    def _draw_overlay(self, image):
+        if self._overlay is None:
+            return
+
+        if self._overlay_image is None:
+            self._overlay_image = Image.open(self._overlay).convert("RGBA")
+            self._overlay_image.thumbnail(self._dimensions, Image.BICUBIC)
+
+        base_w, base_h = image.size
+        overlay_w, overlay_h = self._overlay_image.size
+        overlay_x = int((base_w - overlay_w) / 2)
+        overlay_h = base_h - overlay_h
+
+        image.paste(self._overlay_image, (overlay_x, overlay_h), self._overlay_image)
+
+    def _draw_label(self, image):
+        if self._label is None:
             return
 
         fnt = ImageFont.truetype('Fonts/Roboto-Bold.ttf', 12)
-        d = ImageDraw.Draw(self.image)
+        d = ImageDraw.Draw(image)
 
-        w, h = d.textsize(self.label, font=fnt)
-        d.text(((self.image.width - w) / 2, 2), self.label, font=fnt, fill=(255, 255, 255, 128))
+        w, h = d.textsize(self._label, font=fnt)
 
-    def _draw_value(self):
-        if self.value is None:
+        pos = ((image.width - w) / 2, 2)
+        d.text(pos, self._label, font=fnt, fill=(255, 255, 255, 128))
+
+    def _draw_value(self, image):
+        if self._value is None:
             return
 
         fnt = ImageFont.truetype('Fonts/Roboto-Light.ttf', 18)
-        d = ImageDraw.Draw(self.image)
+        d = ImageDraw.Draw(image)
 
-        w, h = d.textsize(self.value, font=fnt)
-        d.text(((self.image.width - w) / 2, self.image.height - h - 2),
-               self.value, font=fnt, fill=(255, 255, 255, 128))
+        w, h = d.textsize(self._value, font=fnt)
 
-    def set_label(self, text):
-        self.label = text
-        self.pixels = None
-
-    def set_value(self, text):
-        self.value = text
-        self.pixels = None
+        pos = ((image.width - w) / 2, image.height - h - 2)
+        d.text(pos, self._value, font=fnt, fill=(255, 255, 255, 128))
 
     def __getitem__(self, key):
-        if self.pixels is None:
-            self.image = self.base_image.copy()
-            self._draw_label()
-            self._draw_value()
-            self.pixels = [b for b in self._pixels()]
+        if self._pixels is None:
+            def pixels():
+                image = self._get_background()
+                self._draw_overlay(image)
+                self._draw_label(image)
+                self._draw_value(image)
 
-        return self.pixels[key]
+                for y in range(image.height):
+                    for x in range(image.width):
+                        color = image.getpixel((image.width - x - 1, y))
+                        yield color[2]
+                        yield color[1]
+                        yield color[0]
 
+            self._pixels = [b for b in pixels()]
 
-class ColorTile(BaseTile):
-    def __init__(self, dimensions, color, label=None, value=None):
-        base_image = Image.new("RGB", dimensions, color)
-        super().__init__(base_image, label, value)
-
-
-class ImageTile(BaseTile):
-    def __init__(self, dimensions, filename, label=None, value=None):
-        base_image = Image.new("RGB", dimensions, (0, 0, 0))
-
-        overlay_image = Image.open(filename).convert("RGBA")
-        overlay_image.thumbnail(dimensions, Image.BICUBIC)
-
-        base_w, base_h = base_image.size
-        overlay_w, overlay_h = overlay_image.size
-        overlay_x = int((base_w - overlay_w) / 2)
-        overlay_h = base_h - overlay_h
-        base_image.paste(overlay_image, (overlay_x, overlay_h), overlay_image)
-
-        super().__init__(base_image, label, value)
+        return self._pixels[key]
