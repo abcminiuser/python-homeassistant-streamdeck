@@ -17,11 +17,11 @@ import sys
 
 class BaseHassTile(object):
     def __init__(self, hass, entity_id, state_images, show_value=False):
-        self.hass         = hass
-        self.entity_id    = entity_id
+        self.hass = hass
+        self.entity_id = entity_id
         self.state_images = state_images
-        self.show_value   = show_value
-        self.old_state    = None
+        self.show_value = show_value
+        self.old_state = None
 
     def get_state(self):
         return self.hass.get_state(self.entity_id)
@@ -86,9 +86,9 @@ class DeckPageManager(object):
         image_format = deck.key_image_format()
         image_dimensions = (image_format['width'], image_format['height'])
 
-        self.deck         = deck
-        self.key_layout   = self.deck.key_layout()
-        self.pages        = pages
+        self.deck = deck
+        self.key_layout = self.deck.key_layout()
+        self.pages = pages
         self.current_page = None
         self.null_button_image = ColorTile(image_dimensions, (0, 0, 0))
 
@@ -99,10 +99,10 @@ class DeckPageManager(object):
     async def update_page(self, force=True):
         rows, cols = self.key_layout
 
-        for x in range(0, cols):
-            for y in range(0, rows):
+        for y in range(rows):
+            for x in range(cols):
                 button_index = (y * cols) + x
-                adjustor   = self.current_page.get((x, y))
+                adjustor = self.current_page.get((x, y))
 
                 if adjustor is not None:
                     button_image = await adjustor.get_image(force=force)
@@ -112,13 +112,13 @@ class DeckPageManager(object):
                     button_image = None
 
                 if button_image is not None:
-                    self.deck.set_key_image(button_index, [b for b in button_image])
+                    self.deck.set_key_image(key=button_index, image=[b for b in button_image])
 
     async def button_state_changed(self, key, state):
         rows, cols = self.key_layout
 
         button_pos = (key % cols, key // cols)
-        adjustor   = self.current_page.get(button_pos)
+        adjustor = self.current_page.get(button_pos)
         if adjustor is not None:
             await adjustor.button_state_changed(state)
 
@@ -132,12 +132,14 @@ async def main(loop):
 
     deck_pages = {
         'home': {
-            (0, 0): LightHassTile(hass, image_dimensions,      'group.study_lights',       'Study'),
-            (0, 1): LightHassTile(hass, image_dimensions,      'light.mr_ed',              'Mr Ed'),
-            (1, 1): LightHassTile(hass, image_dimensions,      'light.desk_lamp',          'Desk Lamp'),
-            (2, 1): LightHassTile(hass, image_dimensions,      'light.study_bias',         'Bias Light'),
-            (3, 1): AutomationHassTile(hass, image_dimensions, 'group.study_automations',  'Auto Dim'),
-            (4, 1): ValueHassTile(hass, image_dimensions,      'sensor.study_temperature', 'Study\nTemp')
+            (0, 0): LightHassTile(hass, image_dimensions, 'group.study_lights', 'Study'),
+            (0, 1): LightHassTile(hass, image_dimensions, 'light.mr_ed', 'Mr Ed'),
+            (1, 1): LightHassTile(hass, image_dimensions, 'light.desk_lamp', 'Desk Lamp'),
+            (2, 1): LightHassTile(hass, image_dimensions, 'light.study_bias', 'Bias Light'),
+            (3, 1): AutomationHassTile(hass, image_dimensions, 'group.study_automations', 'Auto Dim'),
+            (2, 2): ValueHassTile(hass, image_dimensions, 'sensor.living_room_temperature', 'Lvng Rm\nTemp'),
+            (3, 2): ValueHassTile(hass, image_dimensions, 'sensor.bedroom_temperature', 'Bedroom\nTemp'),
+            (4, 2): ValueHassTile(hass, image_dimensions, 'sensor.study_temperature', 'Study\nTemp'),
         }
     }
     deck_page_manager = DeckPageManager(deck, deck_pages)

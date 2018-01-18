@@ -100,7 +100,8 @@ class HomeAssistantWS(object):
         await asyncio.wait(initial_requests, timeout=5)
 
     async def subscribe_to_event(self, event_type, future):
-        self._event_subscriptions[event_type] = self._event_subscriptions.get(event_type, []) + [future]
+        self._event_subscriptions[event_type] = self._event_subscriptions.get(
+            event_type, []) + [future]
 
         message = {'type': 'subscribe_events', 'event_type': event_type}
         response = await self._send_message(message)
@@ -109,7 +110,7 @@ class HomeAssistantWS(object):
     async def set_state(self, domain, service, entity_id):
         message = {'type': 'call_service', 'domain': domain, 'service': service}
         if entity_id is not None:
-            message['service_data'] = { 'entity_id': entity_id }
+            message['service_data'] = {'entity_id': entity_id}
 
         response = await self._send_message(message)
         return response

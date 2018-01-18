@@ -5,20 +5,20 @@
 #         www.fourwalledcubicle.com
 #
 
-from PIL import Image, ImageFilter, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont
 
 
 class BaseTile(object):
     def __init__(self, base_image, label=None, value=None):
         self.base_image = base_image
-        self.image      = base_image
-        self.label      = label
-        self.value      = value
-        self.pixels     = None
+        self.image = base_image
+        self.label = label
+        self.value = value
+        self.pixels = None
 
     def _pixels(self):
-        for y in range(0, self.image.height):
-            for x in range(0, self.image.width):
+        for y in range(self.image.height):
+            for x in range(self.image.width):
                 colour = self.image.getpixel((self.image.width - x - 1, y))
                 yield colour[2]
                 yield colour[1]
@@ -32,7 +32,7 @@ class BaseTile(object):
         d = ImageDraw.Draw(self.image)
 
         w, h = d.textsize(self.label, font=fnt)
-        d.text(((self.image.width - w) / 2, 2), self.label, font=fnt, fill=(255,255,255,128))
+        d.text(((self.image.width - w) / 2, 2), self.label, font=fnt, fill=(255, 255, 255, 128))
 
     def _draw_value(self):
         if self.value is None:
@@ -42,7 +42,8 @@ class BaseTile(object):
         d = ImageDraw.Draw(self.image)
 
         w, h = d.textsize(self.value, font=fnt)
-        d.text(((self.image.width - w) / 2, self.image.height - h - 2), self.value, font=fnt, fill=(255,255,255,128))
+        d.text(((self.image.width - w) / 2, self.image.height - h - 2),
+               self.value, font=fnt, fill=(255, 255, 255, 128))
 
     def set_label(self, text):
         self.label = text
