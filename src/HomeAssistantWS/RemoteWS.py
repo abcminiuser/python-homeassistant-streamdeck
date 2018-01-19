@@ -9,6 +9,7 @@ import asyncio
 import asyncws
 import json
 import itertools
+import collections
 
 
 class HomeAssistantWS(object):
@@ -19,7 +20,7 @@ class HomeAssistantWS(object):
 
         self._id = itertools.count(start=1, step=1)
         self._websocket = None
-        self._event_subscriptions = dict()
+        self._event_subscriptions = collections.defaultdict(list)
         self._message_responses = dict()
         self._entity_states = dict()
 
@@ -41,7 +42,6 @@ class HomeAssistantWS(object):
     async def _receiver(self):
         while True:
             message = await self._receive_message()
-#            print(message, flush=True)
 
             if message['type'] == 'event':
                 event_type = message['event']['event_type']
@@ -100,8 +100,7 @@ class HomeAssistantWS(object):
         await asyncio.wait(initial_requests, timeout=5)
 
     async def subscribe_to_event(self, event_type, future):
-        self._event_subscriptions[event_type] = self._event_subscriptions.get(
-            event_type, []) + [future]
+        self._event_subscriptions[event_type].append(future)
 
         message = {'type': 'subscribe_events', 'event_type': event_type}
         response = await self._send_message(message)

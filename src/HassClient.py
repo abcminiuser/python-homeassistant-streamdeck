@@ -174,6 +174,7 @@ async def main(loop):
     await deck_page_manager.set_deck_page(None)
     await hass.subscribe_to_event('state_changed', hass_state_changed)
 
+
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()
 
