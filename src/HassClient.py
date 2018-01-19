@@ -11,95 +11,106 @@
 from StreamDeck.StreamDeck import DeviceManager
 from HomeAssistantWS.RemoteWS import HomeAssistantWS
 from ImageTile.Tile import ImageTile
+
 import asyncio
+import copy
 import sys
 
 
-class BaseHassTile(object):
-    def __init__(self, hass, deck, entity_id, state_tiles, hass_action):
-        self.hass = hass
+class BaseTile(object):
+    def __init__(self, deck, state_tiles=None):
+        image_format = deck.key_image_format()
+        image_dimensions = (image_format['width'], image_format['height'])
+
         self.deck = deck
+        self.state_tiles = state_tiles if state_tiles is not None else {}
+        self.image_tile = ImageTile(dimensions=image_dimensions)
+
+    async def _get_state(self):
+        return None
+
+    async def get_image(self, force=True):
+        state = await self._get_state()
+        state_tile = self.state_tiles.get(state, self.state_tiles.get(None, {}))
+
+        image_tile = copy.deepcopy(self.image_tile)
+        image_tile.color = state_tile.get('color')
+        image_tile.label = state_tile.get('label')
+        image_tile.overlay = state_tile.get('overlay')
+        image_tile.value = state_tile.get('value')
+        return image_tile
+
+    async def button_state_changed(self, state):
+        pass
+
+
+class HassTile(BaseTile):
+    def __init__(self, deck, state_tiles, hass, entity_id, hass_action):
+        super().__init__(deck, state_tiles)
+        self.hass = hass
         self.entity_id = entity_id
-        self.state_tiles = state_tiles
         self.hass_action = hass_action
         self.old_state = None
 
-    def get_state(self):
-        return self.hass.get_state(self.entity_id)
+    async def _get_state(self):
+        entity_state = await self.hass.get_state(self.entity_id)
+        return entity_state
 
     async def get_image(self, force=True):
-        state = await self.get_state()
+        state = await self._get_state()
         if state == self.old_state and not force:
             return None
 
         self.old_state = state
 
-        state_tile = self.state_tiles.get(state, self.state_tiles[None])
+        image_tile = await super().get_image()
+        if image_tile.value is True:
+            image_tile.value = state
 
-        image_format = self.deck.key_image_format()
-        image_dimensions = (image_format['width'], image_format['height'])
-
-        image = ImageTile(dimensions=image_dimensions)
-        image.color = state_tile.get('color')
-        image.label = state_tile.get('label')
-        image.overlay = state_tile.get('overlay')
-        image.value = state if state_tile.get('value') is True else state_tile.get('value')
-
-        return image
+        return image_tile
 
     async def button_state_changed(self, state):
         if state is not True:
             return
 
-        action = self.hass_action
-
-        if action == 'force_toggle':
-            # If force toggled, we explicitly set the new state to ensure all
-            # targets end up on the desired state (vs inverting their current
-            # state)
-            action = 'turn_off' if await self.get_state() == 'on' else 'turn_on'
-
-        if action is not None:
-            await self.hass.set_state(domain='homeassistant', service=action, entity_id=self.entity_id)
+        if self.hass_action is not None:
+            await self.hass.set_state(domain='homeassistant', service=self.hass_action, entity_id=self.entity_id)
 
 
-class ValueHassTile(BaseHassTile):
-    def __init__(self, hass, deck, entity_id, name):
+class ValueHassTile(HassTile):
+    def __init__(self, deck, hass, entity_id, name):
         state_tiles = {
             None: {'label': name, 'value': True},
         }
-        super().__init__(hass, deck, entity_id, state_tiles, hass_action=None)
+        super().__init__(deck, state_tiles, hass, entity_id, hass_action=None)
 
 
-class LightHassTile(BaseHassTile):
-    def __init__(self, hass, deck, entity_id, name, force_toggle=True):
+class LightHassTile(HassTile):
+    def __init__(self, deck, hass, entity_id, name):
         state_tiles = {
             'on': {'label': name, 'overlay': 'Assets/light_on.png'},
             None: {'label': name, 'overlay': 'Assets/light_off.png'},
         }
-        hass_action = 'force_toggle' if force_toggle else 'toggle'
-        super().__init__(hass, deck, entity_id, state_tiles, hass_action=hass_action)
+        super().__init__(deck, state_tiles, hass, entity_id, hass_action='toggle')
 
 
-class AutomationHassTile(BaseHassTile):
-    def __init__(self, hass, deck, entity_id, name):
+class AutomationHassTile(HassTile):
+    def __init__(self, deck, hass, entity_id, name):
         state_tiles = {
             'on': {'label': name, 'overlay': 'Assets/automation_on.png'},
             None: {'label': name, 'overlay': 'Assets/automation_off.png'},
         }
-        super().__init__(hass, deck, entity_id, state_tiles, hass_action='toggle')
+        super().__init__(deck, state_tiles, hass, entity_id, hass_action='toggle')
 
 
 class DeckPageManager(object):
     def __init__(self, deck, pages):
-        image_format = deck.key_image_format()
-        image_dimensions = (image_format['width'], image_format['height'])
-
         self.deck = deck
-        self.key_layout = self.deck.key_layout()
+        self.key_layout = deck.key_layout()
         self.pages = pages
         self.current_page = None
-        self.empty_tile_image = ImageTile(dimensions=image_dimensions)
+        self.empty_tile = BaseTile(deck)
+        self.current_page = pages.get('home')
 
     async def set_deck_page(self, name):
         self.current_page = self.pages.get(name, self.pages['home'])
@@ -108,18 +119,13 @@ class DeckPageManager(object):
     async def update_page(self, force_redraw=False):
         rows, cols = self.key_layout
 
-        image_format = self.deck.key_image_format()
-        image_dimensions = (image_format['width'], image_format['height'])
-
         for y in range(rows):
             for x in range(cols):
                 button_index = (y * cols) + x
-                tile = self.current_page.get((x, y))
+                tile = self.current_page.get((x, y), self.empty_tile)
 
                 if tile is not None:
                     button_image = await tile.get_image(force=force_redraw)
-                elif force_redraw:
-                    button_image = self.empty_tile_image
                 else:
                     button_image = None
 
@@ -141,14 +147,14 @@ async def main(loop):
 
     deck_pages = {
         'home': {
-            (0, 0): LightHassTile(hass, deck, 'group.study_lights', 'Study'),
-            (0, 1): LightHassTile(hass, deck, 'light.mr_ed', 'Mr Ed'),
-            (1, 1): LightHassTile(hass, deck, 'light.desk_lamp', 'Desk Lamp'),
-            (2, 1): LightHassTile(hass, deck, 'light.study_bias', 'Bias Light'),
-            (3, 1): AutomationHassTile(hass, deck, 'group.study_automations', 'Auto Dim'),
-            (2, 2): ValueHassTile(hass, deck, 'sensor.living_room_temperature', 'Lvng Rm\nTemp'),
-            (3, 2): ValueHassTile(hass, deck, 'sensor.bedroom_temperature', 'Bedroom\nTemp'),
-            (4, 2): ValueHassTile(hass, deck, 'sensor.study_temperature', 'Study\nTemp'),
+            (0, 0): LightHassTile(deck, hass,'group.study_lights', 'Study'),
+            (0, 1): LightHassTile(deck, hass, 'light.mr_ed', 'Mr Ed'),
+            (1, 1): LightHassTile(deck, hass, 'light.desk_lamp', 'Desk Lamp'),
+            (2, 1): LightHassTile(deck, hass, 'light.study_bias', 'Bias Light'),
+            (3, 1): AutomationHassTile(deck, hass, 'group.study_automations', 'Auto Dim'),
+            (2, 2): ValueHassTile(deck, hass, 'sensor.living_room_temperature', 'Lvng Rm\nTemp'),
+            (3, 2): ValueHassTile(deck, hass, 'sensor.bedroom_temperature', 'Bedroom\nTemp'),
+            (4, 2): ValueHassTile(deck, hass, 'sensor.study_temperature', 'Study\nTemp'),
         }
     }
     deck_page_manager = DeckPageManager(deck, deck_pages)
