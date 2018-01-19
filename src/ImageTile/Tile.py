@@ -66,8 +66,13 @@ class ImageTile(object):
         self._value = value
         self._pixels = None
 
-    def _get_background(self):
-        return Image.new("RGB", self._dimensions, self._color)
+    def _get_image(self):
+        image = Image.new("RGB", self._dimensions, self._color)
+        self._draw_overlay(image)
+        self._draw_label(image)
+        self._draw_value(image)
+
+        return image
 
     def _draw_overlay(self, image):
         if self._overlay is None:
@@ -110,19 +115,15 @@ class ImageTile(object):
 
     def __getitem__(self, key):
         if self._pixels is None:
-            def pixels():
-                image = self._get_background()
-                self._draw_overlay(image)
-                self._draw_label(image)
-                self._draw_value(image)
+            def _pixels():
+                image = self._get_image()
 
-                for y in range(image.height):
-                    for x in range(image.width):
-                        color = image.getpixel((image.width - x - 1, y))
-                        yield color[2]
-                        yield color[1]
-                        yield color[0]
+                image_pixels = image.transpose(Image.FLIP_LEFT_RIGHT).getdata()
+                for color in image_pixels:
+                    yield color[2]
+                    yield color[1]
+                    yield color[0]
 
-            self._pixels = [b for b in pixels()]
+            self._pixels = [b for b in _pixels()]
 
         return self._pixels[key]
