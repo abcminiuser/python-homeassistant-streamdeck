@@ -119,7 +119,7 @@ class DeckPageManager(object):
     def _deck_image_update_worker(self):
         while True:
             key, image = self.deck_image_update_queue.get()
-            self.deck.set_key_image(key=key, image=image)
+            self.deck.set_key_image(key=key, image=[b for b in image])
             self.deck_image_update_queue.task_done()
 
     def _schedule_key_image_update(self, key, image):
@@ -141,7 +141,7 @@ class DeckPageManager(object):
                 button_image = await tile.get_image(force=force_redraw)
                 if button_image is not None:
                     button_index = (y * cols) + x
-                    self._schedule_key_image_update(key=button_index, image=[b for b in button_image])
+                    self._schedule_key_image_update(key=button_index, image=button_image)
 
     async def button_state_changed(self, key, state):
         rows, cols = self.key_layout
