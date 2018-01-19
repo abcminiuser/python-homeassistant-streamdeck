@@ -99,13 +99,13 @@ class DeckPageManager(object):
         self.key_layout = self.deck.key_layout()
         self.pages = pages
         self.current_page = None
-        self.empty_tile = ImageTile(dimensions=image_dimensions)
+        self.empty_tile_image = ImageTile(dimensions=image_dimensions)
 
     async def set_deck_page(self, name):
         self.current_page = self.pages.get(name, self.pages['home'])
-        await self.update_page()
+        await self.update_page(force_redraw=True)
 
-    async def update_page(self, force=True):
+    async def update_page(self, force_redraw=False):
         rows, cols = self.key_layout
 
         image_format = self.deck.key_image_format()
@@ -114,12 +114,12 @@ class DeckPageManager(object):
         for y in range(rows):
             for x in range(cols):
                 button_index = (y * cols) + x
-                adjustor = self.current_page.get((x, y))
+                tile = self.current_page.get((x, y))
 
-                if adjustor is not None:
-                    button_image = await adjustor.get_image(force=force)
-                elif force:
-                    button_image = self.empty_tile
+                if tile is not None:
+                    button_image = await tile.get_image(force=force_redraw)
+                elif force_redraw:
+                    button_image = self.empty_tile_image
                 else:
                     button_image = None
 
@@ -130,9 +130,9 @@ class DeckPageManager(object):
         rows, cols = self.key_layout
 
         button_pos = (key % cols, key // cols)
-        adjustor = self.current_page.get(button_pos)
-        if adjustor is not None:
-            await adjustor.button_state_changed(state)
+        tile = self.current_page.get(button_pos)
+        if tile is not None:
+            await tile.button_state_changed(state)
 
 
 async def main(loop):
@@ -154,7 +154,7 @@ async def main(loop):
     deck_page_manager = DeckPageManager(deck, deck_pages)
 
     async def hass_state_changed(data):
-        await deck_page_manager.update_page(force=False)
+        await deck_page_manager.update_page(force_redraw=False)
 
     async def steamdeck_key_state_changed(deck, key, state):
         await deck_page_manager.button_state_changed(key, state)
