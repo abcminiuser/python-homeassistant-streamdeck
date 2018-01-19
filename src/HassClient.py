@@ -16,11 +16,12 @@ import sys
 
 
 class BaseHassTile(object):
-    def __init__(self, hass, deck, entity_id, state_tiles):
+    def __init__(self, hass, deck, entity_id, state_tiles, hass_action):
         self.hass = hass
         self.deck = deck
         self.entity_id = entity_id
         self.state_tiles = state_tiles
+        self.hass_action = hass_action
         self.old_state = None
 
     def get_state(self):
@@ -33,21 +34,33 @@ class BaseHassTile(object):
 
         self.old_state = state
 
+        state_tile = self.state_tiles.get(state, self.state_tiles[None])
+
         image_format = self.deck.key_image_format()
         image_dimensions = (image_format['width'], image_format['height'])
-
-        state_tile = self.state_tiles.get(state, self.state_tiles[None])
 
         image = ImageTile(dimensions=image_dimensions)
         image.color = state_tile.get('color')
         image.label = state_tile.get('label')
         image.overlay = state_tile.get('overlay')
-        image.value = state if state_tile.get('value', False) is True else state_tile.get('value')
+        image.value = state if state_tile.get('value') is True else state_tile.get('value')
 
         return image
 
     async def button_state_changed(self, state):
-        pass
+        if state is not True:
+            return
+
+        action = self.hass_action
+
+        if action == 'force_toggle':
+            # If force toggled, we explicitly set the new state to ensure all
+            # targets end up on the desired state (vs inverting their current
+            # state)
+            action = 'turn_off' if await self.get_state() == 'on' else 'turn_on'
+
+        if action is not None:
+            await self.hass.set_state(domain='homeassistant', service=action, entity_id=self.entity_id)
 
 
 class ValueHassTile(BaseHassTile):
@@ -55,22 +68,17 @@ class ValueHassTile(BaseHassTile):
         state_tiles = {
             None: {'label': name, 'value': True},
         }
-        super().__init__(hass, deck, entity_id, state_tiles)
+        super().__init__(hass, deck, entity_id, state_tiles, hass_action=None)
 
 
 class LightHassTile(BaseHassTile):
-    def __init__(self, hass, deck, entity_id, name):
+    def __init__(self, hass, deck, entity_id, name, force_toggle=True):
         state_tiles = {
             'on': {'label': name, 'overlay': 'Assets/light_on.png'},
             None: {'label': name, 'overlay': 'Assets/light_off.png'},
         }
-        super().__init__(hass, deck, entity_id, state_tiles)
-
-    async def button_state_changed(self, state):
-        await super().button_state_changed(state)
-
-        if state is True:
-            await self.hass.set_state(domain='homeassistant', service='toggle', entity_id=self.entity_id)
+        hass_action = 'force_toggle' if force_toggle else 'toggle'
+        super().__init__(hass, deck, entity_id, state_tiles, hass_action=hass_action)
 
 
 class AutomationHassTile(BaseHassTile):
@@ -79,13 +87,7 @@ class AutomationHassTile(BaseHassTile):
             'on': {'label': name, 'overlay': 'Assets/automation_on.png'},
             None: {'label': name, 'overlay': 'Assets/automation_off.png'},
         }
-        super().__init__(hass, deck, entity_id, state_tiles)
-
-    async def button_state_changed(self, state):
-        await super().button_state_changed(state)
-
-        if state is True:
-            await self.hass.set_state(domain='homeassistant', service='toggle', entity_id=self.entity_id)
+        super().__init__(hass, deck, entity_id, state_tiles, hass_action='toggle')
 
 
 class DeckPageManager(object):
