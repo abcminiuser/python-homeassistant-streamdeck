@@ -114,6 +114,8 @@ class DeckPageManager(object):
         self.current_page = pages.get('home')
         self.deck_image_update_queue = queue.Queue()
         self.deck_image_update_thread = threading.Thread(target=self._deck_image_update_worker)
+
+        self.deck_image_update_thread.daemon = True
         self.deck_image_update_thread.start()
 
     def _deck_image_update_worker(self):
