@@ -54,7 +54,7 @@ class HassTile(BaseTile):
 
     async def _get_state(self):
         entity_state = await self.hass.get_state(self.entity_id)
-        return entity_state
+        return entity_state.get('state')
 
     async def get_image(self, force=True):
         state = await self._get_state()
@@ -173,7 +173,6 @@ async def main(loop):
 
     await deck_page_manager.set_deck_page(None)
     await hass.subscribe_to_event('state_changed', hass_state_changed)
-
 
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()

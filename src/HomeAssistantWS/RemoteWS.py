@@ -62,12 +62,13 @@ class HomeAssistantWS(object):
 
     async def _update_all_states(self):
         def _got_states(future):
+            if future.cancelled():
+                return
+
             success, result = future.result()
             for state in result:
                 entity_id = state['entity_id']
-                entity_state = state['state']
-
-                self._entity_states[entity_id] = entity_state
+                self._entity_states[entity_id] = state
 
         message = {'type': 'get_states'}
         response = await self._send_message(message)
@@ -77,8 +78,7 @@ class HomeAssistantWS(object):
 
     async def _update_state(self, data):
         entity_id = data['entity_id']
-        new_state = data['new_state'].get('state')
-        self._entity_states[entity_id] = new_state
+        self._entity_states[entity_id] = data['new_state']
 
     async def connect(self, api_password=None):
         self._websocket = await asyncws.connect('ws://{}:{}/api/websocket'.format(self._host, self._port))
@@ -115,7 +115,7 @@ class HomeAssistantWS(object):
         return response
 
     async def get_state(self, entity_id):
-        return self._entity_states.get(entity_id)
+        return self._entity_states.get(entity_id, {})
 
     async def get_all_states(self):
         return self._entity_states
