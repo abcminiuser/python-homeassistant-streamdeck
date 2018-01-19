@@ -15,7 +15,8 @@ from ImageTile.Tile import ImageTile
 import asyncio
 import copy
 import sys
-
+import queue
+import threading
 
 class BaseTile(object):
     def __init__(self, deck, state_tiles=None):
@@ -111,6 +112,18 @@ class DeckPageManager(object):
         self.current_page = None
         self.empty_tile = BaseTile(deck)
         self.current_page = pages.get('home')
+        self.deck_image_update_queue = queue.Queue()
+        self.deck_image_update_thread = threading.Thread(target=self._deck_image_update_worker)
+        self.deck_image_update_thread.start()
+
+    def _deck_image_update_worker(self):
+        while True:
+            key, image = self.deck_image_update_queue.get()
+            self.deck.set_key_image(key=key, image=image)
+            self.deck_image_update_queue.task_done()
+
+    def _schedule_key_image_update(self, key, image):
+        self.deck_image_update_queue.put((key, image))
 
     async def set_deck_page(self, name):
         self.current_page = self.pages.get(name, self.pages['home'])
@@ -121,22 +134,20 @@ class DeckPageManager(object):
 
         for y in range(rows):
             for x in range(cols):
-                button_index = (y * cols) + x
                 tile = self.current_page.get((x, y), self.empty_tile)
+                if tile is None:
+                    continue
 
-                if tile is not None:
-                    button_image = await tile.get_image(force=force_redraw)
-                else:
-                    button_image = None
-
+                button_image = await tile.get_image(force=force_redraw)
                 if button_image is not None:
-                    self.deck.set_key_image(key=button_index, image=[b for b in button_image])
+                    button_index = (y * cols) + x
+                    self._schedule_key_image_update(key=button_index, image=[b for b in button_image])
 
     async def button_state_changed(self, key, state):
         rows, cols = self.key_layout
 
-        button_pos = (key % cols, key // cols)
-        tile = self.current_page.get(button_pos)
+        x, y = (key % cols, key // cols)
+        tile = self.current_page.get((x, y))
         if tile is not None:
             await tile.button_state_changed(state)
 
@@ -179,10 +190,8 @@ if __name__ == "__main__":
 
     if "--debug" in sys.argv:
         print("Debug enabled", flush=True)
-        import warnings
         loop.set_debug(True)
-        loop.slow_callback_duration = 0.2
-        warnings.simplefilter('always', ResourceWarning)
+        loop.slow_callback_duration = 0.15
 
     loop.run_until_complete(main(loop))
     loop.run_forever()
