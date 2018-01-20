@@ -121,7 +121,7 @@ class DeckPageManager(object):
     def _deck_image_update_worker(self):
         while True:
             key, image = self.deck_image_update_queue.get()
-            self.deck.set_key_image(key=key, image=[b for b in image])
+            self.deck.set_key_image(key=key, image=image)
             self.deck_image_update_queue.task_done()
 
     def _schedule_key_image_update(self, key, image):

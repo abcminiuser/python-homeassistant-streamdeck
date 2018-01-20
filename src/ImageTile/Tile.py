@@ -124,6 +124,6 @@ class ImageTile(object):
                     yield color[1]
                     yield color[0]
 
-            self._pixels = [b for b in _pixels()]
+            self._pixels = bytes(_pixels())
 
         return self._pixels[key]

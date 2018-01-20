@@ -96,7 +96,10 @@ class StreamDeck(object):
         any registered callbacks.
         """
         while self.read_thread_run:
-            payload = self.device.read(17)
+            try:
+                payload = self.device.read(17)
+            except ValueError as e:
+                self.read_thread_run = False
 
             if len(payload):
                 new_key_states = [bool(s) for s in payload[1:]]
@@ -240,12 +243,12 @@ class StreamDeck(object):
                      information on the image format accepted by the device.
 
         :param int key: Index of the button whose image is to be updated.
-        :param array image: Pixel data of the image to set on the button. If
-                            None, the key will be cleared to a black color.
+        :param enumerable image: Pixel data of the image to set on the button.
+                                 If `None`, the key will be cleared to a black
+                                 color.
         """
 
-        if image is None:
-            image = bytearray(self.KEY_IMAGE_SIZE)
+        image = bytes(image if image is not None else self.KEY_IMAGE_SIZE)
 
         if min(max(key, 0), self.KEY_COUNT) != key:
             raise IndexError("Invalid key index {}.".format(key))
