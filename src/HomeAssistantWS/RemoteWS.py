@@ -13,10 +13,10 @@ import collections
 
 
 class HomeAssistantWS(object):
-    def __init__(self, host, port=8123, loop=asyncio.get_event_loop()):
+    def __init__(self, host, port=None, loop=None):
         self._host = host
-        self._port = port
-        self._loop = loop
+        self._port = port if port is not None else 8123
+        self._loop = loop if loop is not None else asyncio.get_event_loop()
 
         self._id = itertools.count(start=1, step=1)
         self._websocket = None

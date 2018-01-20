@@ -181,6 +181,7 @@ async def main(loop):
     await hass.connect()
 
     deck.open()
+    deck.reset()
     deck.set_brightness(20)
     deck.set_key_callback_async(steamdeck_key_state_changed)
 
