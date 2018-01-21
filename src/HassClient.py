@@ -18,6 +18,7 @@ import sys
 import queue
 import threading
 
+
 class BaseTile(object):
     def __init__(self, deck, state_tiles=None):
         image_format = deck.key_image_format()

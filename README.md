@@ -16,7 +16,7 @@ updates of the button images to reflect the current entity states.
 
 Working - kind of. You can define your own page controller and attach lights and
 automation objects to them, which are toggled on or off when the button is
-pressed. You can also attach a value adjustor to a button which will just shown
+pressed. You can also attach a value adjuster to a button which will just shown
 the current value of a given Home Assistant sensor.
 
 This is my first asyncio project, and I'm not familiar with the technology, so
@@ -38,9 +38,9 @@ HIDAPI, for USB HID access:
 ```
 pip3 install hidapi
 ```
-Python Image Library (PIL), for dynamic tile image creation:
+Pillow, the Python Image Library (PIL) fork, for dynamic tile image creation:
 ```
-pip3 install pil
+pip3 install pillow
 ```
 Asynchronous Websockets (AsyncWS), for communication with Home Assistant:
 ```
