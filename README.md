@@ -23,9 +23,10 @@ This is my first asyncio project, and I'm not familiar with the technology, so
 everything can be heavily improved. If you know asyncio, please submit patches
 to help me out!
 
-Nothing is robust yet, and I'm hard-coding my own server and IP and entities in
-the main client file until I come up with a definition language. Edit these
-files to suit your own setup.
+Nothing is robust yet, and only some of the settings of the client can be
+adjusted in the `config.yaml` file (others, such as the tile layouts need to be
+hard-coded in `HassClient.py` until I finish the configuration file
+implementation). Edit these files to suit your own setup.
 
 ## Dependencies:
 
@@ -45,6 +46,10 @@ pip3 install pillow
 Asynchronous Websockets (AsyncWS), for communication with Home Assistant:
 ```
 pip3 install asyncws
+```
+PyYAML, for configuration file parsing:
+```
+pip3 install pyyaml
 ```
 
 ## License:

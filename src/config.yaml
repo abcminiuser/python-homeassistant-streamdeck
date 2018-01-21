@@ -1,0 +1,53 @@
+streamdeck:
+  brightness: 20
+
+debug: True
+
+home_assistant:
+  host: 192.168.1.104
+  api_password: ~
+
+streamdeck:
+  brightness: 20
+
+# TODO: NOT YET IMPLEMENTED
+tiles:
+  - type: "light"
+    class: 'HassTile'
+    states:
+      - state: 'on'
+        label: '%name%'
+        overlay: 'Assets/light_on.png'
+      - state: ~
+        label: '%name%'
+        overlay: 'Assets/light_off.png'
+
+  - type: "automation"
+    class: 'HassTile'
+    states:
+      - state: 'on'
+        label: '%name%'
+        overlay: 'Assets/automation_on.png'
+      - state: ~
+        label: '%name%'
+        overlay: 'Assets/automation_off.png'
+
+  - type: "indicator"
+    class: 'HassTile'
+    states:
+      - state: ~
+        label: '%name%'
+        value: '%state%'
+
+# TODO: NOT YET IMPLEMENTED
+screens:
+  - name: "home"
+    tiles:
+      - position: [1, 2]
+        type: "light"
+        name: "Mr Ed"
+        entity_name: "light.mr_ed"
+      - position: [1, 3]
+        type: "value"
+        name: "Temp"
+        entity_name: "sensor.study_temperature"
