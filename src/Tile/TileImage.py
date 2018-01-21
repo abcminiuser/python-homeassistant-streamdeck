@@ -8,7 +8,7 @@
 from PIL import Image, ImageDraw, ImageFont
 
 
-class ImageTile(object):
+class TileImage(object):
     def __init__(self, dimensions=(1, 1)):
         self._pixels = None
         self._overlay_image = None
