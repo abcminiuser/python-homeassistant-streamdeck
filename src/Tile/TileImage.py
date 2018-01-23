@@ -17,7 +17,11 @@ class TileImage(object):
         self.color = (0, 0, 0)
         self.overlay = None
         self.label = None
+        self.label_font = None
+        self.label_size = None
         self.value = None
+        self.value_font = None
+        self.value_size = None
 
     @property
     def dimensions(self):
@@ -32,17 +36,32 @@ class TileImage(object):
         return self._overlay
 
     @property
-    def label(self, text):
+    def label(self):
         return self._label
+
+    @property
+    def label_font(self):
+        return self._label_font
+
+    @property
+    def label_size(self):
+        return self._label_size
 
     @property
     def value(self):
         return self._value
 
+    @property
+    def value_font(self):
+        return self._value_font
+
+    @property
+    def value_size(self):
+        return self._value_size
+
     @dimensions.setter
     def dimensions(self, size):
         self._dimensions = size
-        self._overlay_image = None
         self._pixels = None
 
     @color.setter
@@ -61,9 +80,29 @@ class TileImage(object):
         self._label = text
         self._pixels = None
 
+    @label_font.setter
+    def label_font(self, font):
+        self._label_font = font
+        self._pixels = None
+
+    @label_size.setter
+    def label_size(self, size):
+        self._label_size = size
+        self._pixels = None
+
     @value.setter
     def value(self, value):
         self._value = value
+        self._pixels = None
+
+    @value_font.setter
+    def value_font(self, font):
+        self._value_font = font
+        self._pixels = None
+
+    @value_size.setter
+    def value_size(self, size):
+        self._value_size = size
         self._pixels = None
 
     def _get_image(self):
@@ -80,20 +119,29 @@ class TileImage(object):
 
         if self._overlay_image is None:
             self._overlay_image = Image.open(self._overlay).convert("RGBA")
-            self._overlay_image.thumbnail(self._dimensions, Image.LANCZOS)
 
         base_w, base_h = image.size
-        overlay_w, overlay_h = self._overlay_image.size
-        overlay_x = int((base_w - overlay_w) / 2)
-        overlay_h = base_h - overlay_h
+        overlay_w, overlay_h = image.size
 
-        image.paste(self._overlay_image, (overlay_x, overlay_h), self._overlay_image)
+        if self._label_size:
+            overlay_h = min(overlay_h, base_h - 2 * (5 + self._label_size))
+        if self._value_size:
+            overlay_h = min(overlay_h, base_h - 2 * (5 + self._label_size))
+
+        overlay_image = self._overlay_image.copy()
+        self._overlay_image.thumbnail((overlay_w, overlay_h), Image.LANCZOS)
+        overlay_w, overlay_h = self._overlay_image.size
+
+        overlay_x = int((base_w - overlay_w) / 2)
+        overlay_y = int((base_h - overlay_h) / 2)
+
+        image.paste(self._overlay_image, (overlay_x, overlay_y), self._overlay_image)
 
     def _draw_label(self, image):
         if self._label is None:
             return
 
-        fnt = ImageFont.truetype('Fonts/Roboto-Bold.ttf', 12)
+        fnt = ImageFont.truetype(self._label_font or 'Fonts/Roboto-Bold.ttf', self._label_size or 12)
         d = ImageDraw.Draw(image)
 
         w, h = d.textsize(self._label, font=fnt)
@@ -105,7 +153,7 @@ class TileImage(object):
         if self._value is None:
             return
 
-        fnt = ImageFont.truetype('Fonts/Roboto-Light.ttf', 18)
+        fnt = ImageFont.truetype(self._value_font or 'Fonts/Roboto-Light.ttf', self._value_size or 18)
         d = ImageDraw.Draw(image)
 
         w, h = d.textsize(self._value, font=fnt)

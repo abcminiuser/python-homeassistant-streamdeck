@@ -5,49 +5,64 @@ debug: True
 
 home_assistant:
   host: 192.168.1.104
+  port: ~
   api_password: ~
 
 streamdeck:
   brightness: 20
 
-# TODO: NOT YET IMPLEMENTED
 tiles:
   - type: "light"
     class: 'HassTile'
     states:
       - state: 'on'
-        label: '%name%'
+        label: '{name}'
+        label_font: Fonts/Roboto-Bold.ttf
+        label_size: 12
         overlay: 'Assets/light_on.png'
       - state: ~
-        label: '%name%'
+        label: '{name}'
+        label_font: Fonts/Roboto-Bold.ttf
+        label_size: 12
         overlay: 'Assets/light_off.png'
+    action: 'toggle'
 
   - type: "automation"
     class: 'HassTile'
     states:
       - state: 'on'
-        label: '%name%'
+        label: '{name}'
+        label_font: Fonts/Roboto-Bold.ttf
+        label_size: 12
         overlay: 'Assets/automation_on.png'
       - state: ~
-        label: '%name%'
+        label: '{name}'
+        label_font: Fonts/Roboto-Bold.ttf
+        label_size: 12
         overlay: 'Assets/automation_off.png'
+    action: 'toggle'
 
-  - type: "indicator"
+  - type: "temperature"
     class: 'HassTile'
     states:
       - state: ~
-        label: '%name%'
-        value: '%state%'
+        label: '{name}'
+        label_font: Fonts/Roboto-Bold.ttf
+        label_size: 12
+        value: '{state} °C'
+        value_font: Fonts/Roboto-Light.ttf
+        value_size: 18
+        overlay: 'Assets/sensor.png'
+    action: ~
 
-# TODO: NOT YET IMPLEMENTED
 screens:
   - name: "home"
     tiles:
-      - position: [1, 2]
+      - position: [0, 0]
         type: "light"
         name: "Mr Ed"
         entity_name: "light.mr_ed"
-      - position: [1, 3]
-        type: "value"
-        name: "Temp"
+      - position: [0, 1]
+        type: "temperature"
+        name: "Study Temp"
         entity_name: "sensor.study_temperature"

@@ -52,21 +52,51 @@ async def main(loop, config):
     deck = DeviceManager().enumerate()[0]
     hass = HomeAssistantWS(host=conf_hass_host, port=conf_hass_port)
 
-    # TODO: Replace with layout and tile definitions from config file
-    deck_pages = {
-        'home': {
-            (0, 0): LightHassTile(deck, hass, 'group.study_lights', 'Study'),
-            (0, 1): LightHassTile(deck, hass, 'light.mr_ed', 'Mr Ed'),
-            (1, 1): LightHassTile(deck, hass, 'light.desk_lamp', 'Desk Lamp'),
-            (2, 1): LightHassTile(deck, hass, 'light.study_bias', 'Bias Light'),
-            (3, 1): AutomationHassTile(deck, hass, 'group.study_automations', 'Auto Dim'),
-            (2, 2): ValueHassTile(deck, hass, 'sensor.living_room_temperature', 'Lvng Rm\nTemp'),
-            (3, 2): ValueHassTile(deck, hass, 'sensor.bedroom_temperature', 'Bedroom\nTemp'),
-            (4, 2): ValueHassTile(deck, hass, 'sensor.study_temperature', 'Study\nTemp'),
-        }
-    }
+    tiles = dict()
+    pages = dict()
 
-    tile_manager = TileManager(deck, deck_pages)
+    tile_classes = getattr(__import__("Tile"), "Tile")
+
+    conf_tiles = config.get('tiles')
+    for conf_tile in conf_tiles:
+        conf_tile_type = conf_tile.get('type')
+        conf_tile_class = conf_tile.get('class')
+        conf_tile_action = conf_tile.get('action')
+        conf_tile_states = conf_tile.get('states')
+
+        tile_states = dict()
+        for conf_tile_state in conf_tile_states:
+            state = conf_tile_state.get('state')
+            tile_states[state] = conf_tile_state
+
+        tiles[conf_tile_type] = {
+            'class': getattr(tile_classes, conf_tile_class),
+            'states': tile_states,
+            'action': conf_tile_action,
+        }
+
+    conf_screens = config.get('screens')
+    for conf_screen in conf_screens:
+        conf_screen_name = conf_screen.get('name')
+        conf_screen_tiles = conf_screen.get('tiles')
+
+        page_tiles = dict()
+        for conf_screen_tile in conf_screen_tiles:
+            conf_screen_tile_pos = conf_screen_tile.get('position')
+            conf_screen_tile_type = conf_screen_tile.get('type')
+            conf_screen_tile_name = conf_screen_tile.get('name')
+            conf_screen_tile_entity_name = conf_screen_tile.get('entity_name')
+
+            conf_screen_tile_class = tiles[conf_screen_tile_type]['class']
+            conf_screen_tile_states = tiles[conf_screen_tile_type]['states']
+            conf_screen_tile_action = tiles[conf_screen_tile_type]['action']
+
+            x, y = conf_screen_tile_pos
+            page_tiles[(x, y)] = conf_screen_tile_class(deck, conf_screen_tile_states, conf_screen_tile_name, hass, conf_screen_tile_entity_name, conf_screen_tile_action)
+
+        pages[conf_screen_name] = page_tiles
+
+    tile_manager = TileManager(deck, pages)
 
     async def hass_state_changed(data):
         await tile_manager.update_page(force_redraw=False)

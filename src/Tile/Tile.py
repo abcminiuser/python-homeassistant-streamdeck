@@ -11,26 +11,42 @@ import copy
 
 
 class BaseTile(object):
-    def __init__(self, deck, state_tiles=None):
+    def __init__(self, deck, state_tiles=None, name=None):
         image_format = deck.key_image_format()
         image_dimensions = (image_format['width'], image_format['height'])
 
         self.deck = deck
         self.state_tiles = state_tiles or {}
-        self.image_tile = TileImage(dimensions=image_dimensions)
+        self.name = name
 
-    async def _get_state(self):
-        return None
+        self.image_tile = TileImage(dimensions=image_dimensions)
+        self.old_state = None
+
+    @property
+    async def state(self):
+        return {'state' : None}
 
     async def get_image(self, force=True):
-        state = await self._get_state()
-        state_tile = self.state_tiles.get(state, self.state_tiles.get(None, {}))
+        state = await self.state
+        if state == self.old_state and not force:
+            return None
+        self.old_state = state
+
+        state_tile = self.state_tiles.get(state.get('state'), self.state_tiles.get(None, {}))
+
+        format_dict = state
+        format_dict['name'] = self.name
 
         image_tile = copy.deepcopy(self.image_tile)
         image_tile.color = state_tile.get('color')
-        image_tile.label = state_tile.get('label')
         image_tile.overlay = state_tile.get('overlay')
-        image_tile.value = state_tile.get('value')
+        image_tile.label = state_tile.get('label', '').format_map(format_dict)
+        image_tile.label_font = state_tile.get('label_font')
+        image_tile.label_size = state_tile.get('label_size')
+        image_tile.value = state_tile.get('value', '').format_map(format_dict)
+        image_tile.value_font = state_tile.get('value_font')
+        image_tile.value_size = state_tile.get('value_size')
+
         return image_tile
 
     async def button_state_changed(self, state):
@@ -38,29 +54,16 @@ class BaseTile(object):
 
 
 class HassTile(BaseTile):
-    def __init__(self, deck, state_tiles, hass, entity_id, hass_action):
-        super().__init__(deck, state_tiles)
+    def __init__(self, deck, state_tiles, name, hass, entity_id, hass_action):
+        super().__init__(deck, state_tiles, name)
         self.hass = hass
         self.entity_id = entity_id
         self.hass_action = hass_action
-        self.old_state = None
 
-    async def _get_state(self):
-        entity_state = await self.hass.get_state(self.entity_id)
-        return entity_state.get('state')
-
-    async def get_image(self, force=True):
-        state = await self._get_state()
-        if state == self.old_state and not force:
-            return None
-
-        self.old_state = state
-
-        image_tile = await super().get_image()
-        if image_tile.value is True:
-            image_tile.value = state
-
-        return image_tile
+    @property
+    async def state(self):
+        hass_state = await self.hass.get_state(self.entity_id)
+        return hass_state
 
     async def button_state_changed(self, state):
         if state is not True:
@@ -68,29 +71,3 @@ class HassTile(BaseTile):
 
         if self.hass_action is not None:
             await self.hass.set_state(domain='homeassistant', service=self.hass_action, entity_id=self.entity_id)
-
-
-class ValueHassTile(HassTile):
-    def __init__(self, deck, hass, entity_id, name):
-        state_tiles = {
-            None: {'label': name, 'value': True},
-        }
-        super().__init__(deck, state_tiles, hass, entity_id, hass_action=None)
-
-
-class LightHassTile(HassTile):
-    def __init__(self, deck, hass, entity_id, name):
-        state_tiles = {
-            'on': {'label': name, 'overlay': 'Assets/light_on.png'},
-            None: {'label': name, 'overlay': 'Assets/light_off.png'},
-        }
-        super().__init__(deck, state_tiles, hass, entity_id, hass_action='toggle')
-
-
-class AutomationHassTile(HassTile):
-    def __init__(self, deck, hass, entity_id, name):
-        state_tiles = {
-            'on': {'label': name, 'overlay': 'Assets/automation_on.png'},
-            None: {'label': name, 'overlay': 'Assets/automation_off.png'},
-        }
-        super().__init__(deck, state_tiles, hass, entity_id, hass_action='toggle')
