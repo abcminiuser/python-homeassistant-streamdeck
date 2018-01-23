@@ -60,9 +60,29 @@ screens:
     tiles:
       - position: [0, 0]
         type: "light"
+        name: "Study"
+        entity_name: "group.study_lights"
+      - position: [0, 2]
+        type: "light"
         name: "Mr Ed"
         entity_name: "light.mr_ed"
-      - position: [0, 1]
+      - position: [1, 2]
+        type: "light"
+        name: "Desk Lamp"
+        entity_name: "light.desk_lamp"
+      - position: [2, 2]
+        type: "light"
+        name: "Study Bias"
+        entity_name: "light.study_bias"
+      - position: [4, 0]
         type: "temperature"
-        name: "Study Temp"
+        name: "Study"
         entity_name: "sensor.study_temperature"
+      - position: [3, 0]
+        type: "temperature"
+        name: "Living Room"
+        entity_name: "sensor.living_room_temperature"
+      - position: [2, 0]
+        type: "temperature"
+        name: "Bedroom"
+        entity_name: "sensor.bedroom_temperature"

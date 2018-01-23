@@ -107,59 +107,68 @@ class TileImage(object):
 
     def _get_image(self):
         image = Image.new("RGB", self._dimensions, self._color)
-        self._draw_overlay(image)
-        self._draw_label(image)
-        self._draw_value(image)
+
+        l_x, l_y, l_w, l_h = self._draw_label(image)
+        v_x, v_y, v_w, v_h = self._draw_value(image)
+
+        o_x = 0
+        o_y = (l_y or 0) + (l_h or 0)
+        o_w = self._dimensions[0]
+        o_h = (v_y or self._dimensions[1]) - o_y
+
+        overlay_pos = (int(o_x), int(o_y))
+        overlay_size = (int(o_w), int(o_h))
+        self._draw_overlay(image, overlay_pos, overlay_size)
 
         return image
 
-    def _draw_overlay(self, image):
+    def _draw_overlay(self, image, pos, max_size):
         if self._overlay is None:
+            return
+
+        max_size = min(image.size, max_size)
+        if max_size[0] < 0 or max_size[1] < 0:
             return
 
         if self._overlay_image is None:
             self._overlay_image = Image.open(self._overlay).convert("RGBA")
 
-        base_w, base_h = image.size
-        overlay_w, overlay_h = image.size
-
-        if self._label_size:
-            overlay_h = min(overlay_h, base_h - 2 * (5 + self._label_size))
-        if self._value_size:
-            overlay_h = min(overlay_h, base_h - 2 * (5 + self._label_size))
-
         overlay_image = self._overlay_image.copy()
-        self._overlay_image.thumbnail((overlay_w, overlay_h), Image.LANCZOS)
-        overlay_w, overlay_h = self._overlay_image.size
+        self._overlay_image.thumbnail(max_size, Image.LANCZOS)
 
-        overlay_x = int((base_w - overlay_w) / 2)
-        overlay_y = int((base_h - overlay_h) / 2)
+        overlay_w, overlay_h = self._overlay_image.size
+        overlay_x = pos[0] + int((max_size[0] - overlay_w) / 2)
+        overlay_y = pos[1] + int((max_size[1] - overlay_h) / 2)
 
         image.paste(self._overlay_image, (overlay_x, overlay_y), self._overlay_image)
 
     def _draw_label(self, image):
         if self._label is None:
-            return
+            return None, None, None, None
 
-        fnt = ImageFont.truetype(self._label_font or 'Fonts/Roboto-Bold.ttf', self._label_size or 12)
+        font = ImageFont.truetype(self._label_font or 'Fonts/Roboto-Bold.ttf', self._label_size or 12)
         d = ImageDraw.Draw(image)
 
-        w, h = d.textsize(self._label, font=fnt)
+        w, h = d.textsize(self._label, font=font)
+        padding = 2
 
-        pos = ((image.width - w) / 2, 2)
-        d.text(pos, self._label, font=fnt, fill=(255, 255, 255, 128))
+        pos = ((image.width - w) / 2, padding)
+        d.text(pos, self._label, font=font, fill=(255, 255, 255, 128))
+        return (pos[0], pos[1], w, h + padding)
 
     def _draw_value(self, image):
         if self._value is None:
-            return
+            return None, None, None, None
 
-        fnt = ImageFont.truetype(self._value_font or 'Fonts/Roboto-Light.ttf', self._value_size or 18)
+        font = ImageFont.truetype(self._value_font or 'Fonts/Roboto-Light.ttf', self._value_size or 18)
         d = ImageDraw.Draw(image)
 
-        w, h = d.textsize(self._value, font=fnt)
+        w, h = d.textsize(self._value, font=font)
+        padding = 2
 
-        pos = ((image.width - w) / 2, image.height - h - 2)
-        d.text(pos, self._value, font=fnt, fill=(255, 255, 255, 128))
+        pos = ((image.width - w) / 2, image.height - h - padding)
+        d.text(pos, self._value, font=font, fill=(255, 255, 255, 128))
+        return (pos[0], pos[1], w, h + padding)
 
     def __getitem__(self, key):
         if self._pixels is None:

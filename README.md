@@ -14,19 +14,18 @@ updates of the button images to reflect the current entity states.
 
 ## Status:
 
-Working - kind of. You can define your own page controller and attach lights and
-automation objects to them, which are toggled on or off when the button is
-pressed. You can also attach a value adjuster to a button which will just shown
-the current value of a given Home Assistant sensor.
+Working. You can define your own page layout in the configuration YAML file, and
+attach HomeAssistant lights and other entities to buttons on the StreamDeck. The
+current state of the entity can be shown on the button in both text form, as
+as image form (live button state updates are supported). The HomeAssistant
+action to trigger when a button is pressed is also configurable.
 
 This is my first asyncio project, and I'm not familiar with the technology, so
 everything can be heavily improved. If you know asyncio, please submit patches
 to help me out!
 
-Nothing is robust yet, and only some of the settings of the client can be
-adjusted in the `config.yaml` file (others, such as the tile layouts need to be
-hard-coded in `HassClient.py` until I finish the configuration file
-implementation). Edit these files to suit your own setup.
+Nothing is robust yet, and the configuration format used in the `config.yaml`
+file is not yet documented. Multiple pages are not yet supported.
 
 ## Dependencies:
 
