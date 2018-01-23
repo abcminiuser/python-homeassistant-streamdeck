@@ -80,7 +80,7 @@ class TileImage(object):
 
         if self._overlay_image is None:
             self._overlay_image = Image.open(self._overlay).convert("RGBA")
-            self._overlay_image.thumbnail(self._dimensions, Image.BICUBIC)
+            self._overlay_image.thumbnail(self._dimensions, Image.LANCZOS)
 
         base_w, base_h = image.size
         overlay_w, overlay_h = self._overlay_image.size

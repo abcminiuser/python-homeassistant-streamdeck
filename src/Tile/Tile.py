@@ -16,7 +16,7 @@ class BaseTile(object):
         image_dimensions = (image_format['width'], image_format['height'])
 
         self.deck = deck
-        self.state_tiles = state_tiles if state_tiles is not None else {}
+        self.state_tiles = state_tiles or {}
         self.image_tile = TileImage(dimensions=image_dimensions)
 
     async def _get_state(self):
