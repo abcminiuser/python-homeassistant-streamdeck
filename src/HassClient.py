@@ -22,8 +22,8 @@ class Config(object):
         try:
             logging.info('Reading config file "{}"...'.format(filename))
 
-            with open(filename, 'r') as config_file:
-                self.config = yaml.load(config_file)
+            with open(filename, 'r', encoding='utf-8') as config_file:
+                self.config = yaml.safe_load(config_file)
         except IOError as e:
             logging.error('Failed to read config file "{}"!'.format(filename))
 
