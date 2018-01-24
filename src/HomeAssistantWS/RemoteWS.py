@@ -26,7 +26,7 @@ class HomeAssistantWS(object):
 
     async def _receive_message(self):
         message = await self._websocket.recv()
-        return json.loads(message)
+        return json.loads(message) if message else None
 
     async def _send_message(self, message):
         message_id = next(self._id)
@@ -42,18 +42,21 @@ class HomeAssistantWS(object):
     async def _receiver(self):
         while True:
             message = await self._receive_message()
+            if message is None:
+                continue
 
-            if message['type'] == 'event':
+            message_type = message.get('type')
+            if message_type == 'event':
                 event_type = message['event']['event_type']
                 event_data = message['event']['data']
 
                 for future in self._event_subscriptions.get(event_type, []):
                     if future is not None:
                         asyncio.ensure_future(future(event_data))
-            elif message['type'] == 'result':
-                request_id = message['id']
-                request_succcess = message['success']
-                request_result = message['result']
+            elif message_type == 'result':
+                request_id = message.get('id')
+                request_succcess = message.get('success')
+                request_result = message.get('result') or message.get('error')
 
                 future = self._message_responses.get(request_id)
                 if future is not None:

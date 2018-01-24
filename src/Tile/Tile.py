@@ -70,4 +70,12 @@ class HassTile(BaseTile):
             return
 
         if self.hass_action is not None:
-            await self.hass.set_state(domain='homeassistant', service=self.hass_action, entity_id=self.entity_id)
+            action = self.hass_action.split('/')
+            if len(action) == 1:
+                domain = 'homeassistant'
+                service = action[0]
+            else:
+                domain = action[0]
+                service = action[1]
+
+            await self.hass.set_state(domain=domain, service=service, entity_id=self.entity_id)

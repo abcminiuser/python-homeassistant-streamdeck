@@ -39,6 +39,16 @@ tiles:
         overlay: 'Assets/automation_off.png'
     action: 'toggle'
 
+  - type: "scene"
+    class: 'HassTile'
+    states:
+      - state: ~
+        label: '{name}'
+        label_font: Fonts/Roboto-Bold.ttf
+        label_size: 12
+        overlay: 'Assets/scene.png'
+    action: 'automation/trigger'
+
   - type: "temperature"
     class: 'HassTile'
     states:
@@ -59,6 +69,14 @@ screens:
         type: "light"
         name: "Study"
         entity_name: "group.study_lights"
+      - position: [0, 1]
+        type: "scene"
+        name: "Normal"
+        entity_name: "automation.bender_pausedstopped"
+      - position: [1, 1]
+        type: "scene"
+        name: "Dim"
+        entity_name: "automation.bender_playing"
       - position: [0, 2]
         type: "light"
         name: "Mr Ed"
@@ -71,6 +89,10 @@ screens:
         type: "light"
         name: "Study Bias"
         entity_name: "light.study_bias"
+      - position: [4, 2]
+        type: "automation"
+        name: "Auto Dim"
+        entity_name: "group.study_automations"
       - position: [4, 0]
         type: "temperature"
         name: "Study"
