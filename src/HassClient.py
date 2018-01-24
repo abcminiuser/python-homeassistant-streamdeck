@@ -38,7 +38,7 @@ class Config(object):
             if location is None:
                 return default
 
-            value = location if location is not None else default
+            value = location or default
 
         return value
 
