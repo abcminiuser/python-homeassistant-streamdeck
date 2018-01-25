@@ -29,10 +29,20 @@ file is not yet documented. Multiple pages are not yet supported.
 
 ## Dependencies:
 
+### Python
+
+Python 3.5 or newer is required. On Debian systems, this can usually be
+installed via:
+```
+sudo apt install python3 python3-pip
+```
+
+### Python Libraries
+
 This library uses my own [python-elgato-streamdeck](https://github.com/abcminiuser/python-elgato-streamdeck)
 library to interface with the Stream Deck devices.
 
-You will need to have the following libraries installed:
+You will need to have the following additional libraries installed:
 
 HIDAPI, for USB HID access:
 ```
@@ -49,6 +59,33 @@ pip3 install asyncws
 PyYAML, for configuration file parsing:
 ```
 pip3 install pyyaml
+```
+
+## Raspberry Pi Installation:
+
+The following script has been verified working on a Raspberry Pi (Model 2 B)
+running a stock Debian Stretch image, to install all the required dependencies
+needed by this project:
+
+```
+# Ensure system is up to date, upgrade all out of date packages
+sudo apt update && sudo apt dist-upgrade -y
+
+# Install the pip Python package manager
+sudo apt install -y python3-pip
+
+# Install system packages needed for the Python hidapi package installation
+sudo apt install -y libudev-dev libusb-1.0-0-dev
+
+# Install dependencies
+pip3 install pillow
+pip3 install asyncws
+pip3 install pyyaml
+pip3 install hidapi
+
+# Install git and check out the repository
+sudo apt install -y git
+git clone https://github.com/abcminiuser/python-homeassistant-streamdeck.git
 ```
 
 ## License:
