@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 #   Python StreamDeck HomeAssistant Client
 #      Released under the MIT license
