@@ -86,6 +86,11 @@ pip3 install asyncws
 pip3 install pyyaml
 pip3 install hidapi
 
+# Add udev rule to allow all users non-root access to Elgato StreamDeck devices:
+sudo tee /etc/udev/rules.d/10-streamdeck.rules << EOF
+	SUBSYSTEMS=="usb", ATTRS{idVendor}=="0fd9", ATTRS{idProduct}=="0060", GROUP="users"
+	EOF
+
 # Install git and check out the repository
 sudo apt install -y git
 git clone https://github.com/abcminiuser/python-homeassistant-streamdeck.git
