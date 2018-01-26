@@ -14,14 +14,14 @@ tiles:
     states:
       - state: 'on'
         label: '{name}'
-        label_font: Fonts/Roboto-Bold.ttf
+        label_font: Assets/Fonts/Roboto-Bold.ttf
         label_size: 12
-        overlay: 'Assets/light_on.png'
+        overlay: 'Assets/Images/light_on.png'
       - state: ~
         label: '{name}'
-        label_font: Fonts/Roboto-Bold.ttf
+        label_font: Assets/Fonts/Roboto-Bold.ttf
         label_size: 12
-        overlay: 'Assets/light_off.png'
+        overlay: 'Assets/Images/light_off.png'
     action: 'toggle'
 
   - type: "automation"
@@ -29,14 +29,14 @@ tiles:
     states:
       - state: 'on'
         label: '{name}'
-        label_font: Fonts/Roboto-Bold.ttf
+        label_font: Assets/Fonts/Roboto-Bold.ttf
         label_size: 12
-        overlay: 'Assets/automation_on.png'
+        overlay: 'Assets/Images/automation_on.png'
       - state: ~
         label: '{name}'
-        label_font: Fonts/Roboto-Bold.ttf
+        label_font: Assets/Fonts/Roboto-Bold.ttf
         label_size: 12
-        overlay: 'Assets/automation_off.png'
+        overlay: 'Assets/Images/automation_off.png'
     action: 'toggle'
 
   - type: "scene"
@@ -44,9 +44,9 @@ tiles:
     states:
       - state: ~
         label: '{name}'
-        label_font: Fonts/Roboto-Bold.ttf
+        label_font: Assets/Fonts/Roboto-Bold.ttf
         label_size: 12
-        overlay: 'Assets/scene.png'
+        overlay: 'Assets/Images/scene.png'
     action: 'automation/trigger'
 
   - type: "temperature"
@@ -54,12 +54,12 @@ tiles:
     states:
       - state: ~
         label: '{name}'
-        label_font: Fonts/Roboto-Bold.ttf
+        label_font: Assets/Fonts/Roboto-Bold.ttf
         label_size: 12
         value: '{state} °C'
-        value_font: Fonts/Roboto-Light.ttf
+        value_font: Assets/Fonts/Roboto-Light.ttf
         value_size: 18
-        overlay: 'Assets/sensor.png'
+        overlay: 'Assets/Images/sensor.png'
     action: ~
 
 screens:

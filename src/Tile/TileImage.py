@@ -146,29 +146,35 @@ class TileImage(object):
         if self._label is None:
             return None, None, None, None
 
-        font = ImageFont.truetype(self._label_font or 'Fonts/Roboto-Bold.ttf', self._label_size or 12)
-        d = ImageDraw.Draw(image)
+        try:
+            font = ImageFont.truetype(self._label_font or 'Assets/Fonts/Roboto-Bold.ttf', self._label_size or 12)
+            d = ImageDraw.Draw(image)
 
-        w, h = d.textsize(self._label, font=font)
-        padding = 2
+            w, h = d.textsize(self._label, font=font)
+            padding = 2
 
-        pos = ((image.width - w) / 2, padding)
-        d.text(pos, self._label, font=font, fill=(255, 255, 255, 128))
-        return (pos[0], pos[1], w, h + padding)
+            pos = ((image.width - w) / 2, padding)
+            d.text(pos, self._label, font=font, fill=(255, 255, 255, 128))
+            return (pos[0], pos[1], w, h + padding)
+        except OSError:
+            return (image.width, 0, image.width, 1)
 
     def _draw_value(self, image):
         if self._value is None:
             return None, None, None, None
 
-        font = ImageFont.truetype(self._value_font or 'Fonts/Roboto-Light.ttf', self._value_size or 18)
-        d = ImageDraw.Draw(image)
+        try:
+            font = ImageFont.truetype(self._value_font or 'Assets/Fonts/Roboto-Light.ttf', self._value_size or 18)
+            d = ImageDraw.Draw(image)
 
-        w, h = d.textsize(self._value, font=font)
-        padding = 2
+            w, h = d.textsize(self._value, font=font)
+            padding = 2
 
-        pos = ((image.width - w) / 2, image.height - h - padding)
-        d.text(pos, self._value, font=font, fill=(255, 255, 255, 128))
-        return (pos[0], pos[1], w, h + padding)
+            pos = ((image.width - w) / 2, image.height - h - padding)
+            d.text(pos, self._value, font=font, fill=(255, 255, 255, 128))
+            return (pos[0], pos[1], w, h + padding)
+        except OSError:
+            return (image.width, 0, image.width, 1)
 
     def __getitem__(self, key):
         if self._pixels is None:
