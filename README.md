@@ -74,8 +74,11 @@ sudo apt update && sudo apt dist-upgrade -y
 # Install the pip Python package manager
 sudo apt install -y python3-pip
 
-# Install system packages needed for the Python hidapi package installation
+# Install system packages needed for the Python hidapi package
 sudo apt install -y libudev-dev libusb-1.0-0-dev
+
+# Install system packages needed for the Python pillow package
+sudo apt install -y python-pil
 
 # Install dependencies
 pip3 install pillow
