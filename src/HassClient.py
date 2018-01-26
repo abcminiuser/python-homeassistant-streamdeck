@@ -49,7 +49,12 @@ async def main(loop, config):
     conf_hass_port = config.get('home_assistant/port', 8123)
     conf_hass_pw = config.get('home_assistant/api_password')
 
-    deck = DeviceManager().enumerate()[0]
+    decks = DeviceManager().enumerate()
+    if len(decks) == 0:
+        logging.error("No StreamDeck found.")
+        return False
+
+    deck = decks[0]
     hass = HomeAssistantWS(host=conf_hass_host, port=conf_hass_port)
 
     tiles = dict()
@@ -115,6 +120,8 @@ async def main(loop, config):
     await tile_manager.set_deck_page(None)
     await hass.subscribe_to_event('state_changed', hass_state_changed)
 
+    return True
+
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
@@ -127,5 +134,6 @@ if __name__ == '__main__':
         loop.set_debug(True)
         loop.slow_callback_duration = 0.15
 
-    loop.run_until_complete(main(loop, config))
-    loop.run_forever()
+    init_ok = loop.run_until_complete(main(loop, config))
+    if init_ok:
+        loop.run_forever()
