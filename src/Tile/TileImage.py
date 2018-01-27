@@ -134,13 +134,13 @@ class TileImage(object):
             self._overlay_image = Image.open(self._overlay).convert("RGBA")
 
         overlay_image = self._overlay_image.copy()
-        self._overlay_image.thumbnail(max_size, Image.LANCZOS)
+        overlay_image.thumbnail(max_size, Image.LANCZOS)
 
-        overlay_w, overlay_h = self._overlay_image.size
+        overlay_w, overlay_h = overlay_image.size
         overlay_x = pos[0] + int((max_size[0] - overlay_w) / 2)
         overlay_y = pos[1] + int((max_size[1] - overlay_h) / 2)
 
-        image.paste(self._overlay_image, (overlay_x, overlay_y), self._overlay_image)
+        image.paste(overlay_image, (overlay_x, overlay_y), overlay_image)
 
     def _draw_label(self, image):
         if self._label is None:

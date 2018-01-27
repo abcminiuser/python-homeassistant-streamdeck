@@ -90,7 +90,7 @@ class HomeAssistantWS(object):
         if api_password is not None:
             # First request should be the API password, if provided
             message = {'type': 'auth', 'api_password': api_password}
-            response = await self._send_message(message)
+            await self._send_message(message)
 
         initial_requests = [
             # We want to track all state changes, to update our local cache
