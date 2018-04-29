@@ -6,7 +6,7 @@
 #
 
 import asyncio
-import asyncws
+import aiohttp
 import json
 import itertools
 import collections
@@ -25,8 +25,8 @@ class HomeAssistantWS(object):
         self._entity_states = dict()
 
     async def _receive_message(self):
-        message = await self._websocket.recv()
-        return json.loads(message) if message else None
+        message = await self._websocket.receive()
+        return json.loads(message.data) if message.type == aiohttp.WSMsgType.text else None
 
     async def _send_message(self, message):
         message_id = next(self._id)
@@ -35,7 +35,7 @@ class HomeAssistantWS(object):
         self._message_responses[message_id] = response_future
 
         message['id'] = message_id
-        await self._websocket.send(json.dumps(message))
+        await self._websocket.send_str(json.dumps(message))
 
         return response_future
 
@@ -84,7 +84,7 @@ class HomeAssistantWS(object):
         self._entity_states[entity_id] = data['new_state']
 
     async def connect(self, api_password=None):
-        self._websocket = await asyncws.connect('ws://{}:{}/api/websocket'.format(self._host, self._port))
+        self._websocket = await aiohttp.ClientSession().ws_connect('http://{}:{}/api/websocket'.format(self._host, self._port))
         self._loop.create_task(self._receiver())
 
         if api_password is not None:

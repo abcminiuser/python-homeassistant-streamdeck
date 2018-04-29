@@ -52,9 +52,9 @@ Pillow, the Python Image Library (PIL) fork, for dynamic tile image creation:
 ```
 pip3 install pillow
 ```
-Asynchronous Websockets (AsyncWS), for communication with Home Assistant:
+aiohttp, for Websocket communication with Home Assistant:
 ```
-pip3 install asyncws
+pip3 install aiohttp
 ```
 PyYAML, for configuration file parsing:
 ```
@@ -82,7 +82,7 @@ sudo apt install -y python-pil
 
 # Install dependencies
 pip3 install pillow
-pip3 install asyncws
+pip3 install aiohttp
 pip3 install pyyaml
 pip3 install hidapi
 
