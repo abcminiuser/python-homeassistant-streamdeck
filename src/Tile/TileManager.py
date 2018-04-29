@@ -8,8 +8,7 @@
 from .Tile import BaseTile
 
 import queue
-import threading
-
+from concurrent.futures import ThreadPoolExecutor
 
 class TileManager(object):
     def __init__(self, deck, pages):
@@ -19,20 +18,8 @@ class TileManager(object):
         self.current_page = None
         self.empty_tile = BaseTile(deck)
         self.current_page = pages.get('home')
-        self.deck_image_update_queue = queue.Queue()
-        self.deck_image_update_thread = threading.Thread(target=self._deck_image_update_worker)
 
-        self.deck_image_update_thread.daemon = True
-        self.deck_image_update_thread.start()
-
-    def _deck_image_update_worker(self):
-        while True:
-            key, image = self.deck_image_update_queue.get()
-            self.deck.set_key_image(key=key, image=image)
-            self.deck_image_update_queue.task_done()
-
-    def _schedule_key_image_update(self, key, image):
-        self.deck_image_update_queue.put((key, image))
+        self._executor = ThreadPoolExecutor(max_workers=1)
 
     async def set_deck_page(self, name):
         self.current_page = self.pages.get(name, self.pages['home'])
@@ -50,7 +37,8 @@ class TileManager(object):
                 button_image = await tile.get_image(force=force_redraw)
                 if button_image is not None:
                     button_index = (y * cols) + x
-                    self._schedule_key_image_update(key=button_index, image=button_image)
+
+                    self._executor.submit(self.deck.set_key_image, key=button_index, image=button_image)
 
     async def button_state_changed(self, key, state):
         rows, cols = self.key_layout
