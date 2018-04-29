@@ -37,7 +37,7 @@ class BaseTile(object):
         format_dict = state
         format_dict['name'] = self.name
 
-        image_tile = copy.deepcopy(self.image_tile)
+        image_tile = self.image_tile
         image_tile.color = state_tile.get('color')
         image_tile.overlay = state_tile.get('overlay')
         image_tile.label = state_tile.get('label', '').format_map(format_dict)

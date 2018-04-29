@@ -50,7 +50,7 @@ async def main(loop, config):
     conf_hass_pw = config.get('home_assistant/api_password')
 
     decks = DeviceManager().enumerate()
-    if len(decks) == 0:
+    if not decks:
         logging.error("No StreamDeck found.")
         return False
 
