@@ -24,10 +24,6 @@ class HomeAssistantWS(object):
         self._message_responses = dict()
         self._entity_states = dict()
 
-    async def _receive_message(self):
-        message = await self._websocket.receive()
-        return json.loads(message.data) if message.type == aiohttp.WSMsgType.text else None
-
     async def _send_message(self, message):
         message_id = next(self._id)
 
@@ -40,8 +36,8 @@ class HomeAssistantWS(object):
         return response_future
 
     async def _receiver(self):
-        while True:
-            message = await self._receive_message()
+        async for message in self._websocket:
+            message = json.loads(message.data) if message.type == aiohttp.WSMsgType.TEXT else None
             if message is None:
                 continue
 
