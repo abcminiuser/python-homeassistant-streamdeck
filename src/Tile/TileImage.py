@@ -178,15 +178,11 @@ class TileImage(object):
 
     def __getitem__(self, key):
         if self._pixels is None:
-            def _pixels():
-                image = self._get_image()
+            image = self._get_image()
+            image_data = image.transpose(Image.FLIP_LEFT_RIGHT).getdata()
 
-                image_pixels = image.transpose(Image.FLIP_LEFT_RIGHT).getdata()
-                for color in image_pixels:
-                    yield color[2]
-                    yield color[1]
-                    yield color[0]
-
-            self._pixels = bytes(_pixels())
+            self._pixels = []
+            for color in image_data:
+                self._pixels.extend([color[2], color[1], color[0]])
 
         return self._pixels[key]
