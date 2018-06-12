@@ -46,6 +46,7 @@ class Config(object):
 async def main(loop, config):
     conf_deck_brightness = config.get('streamdeck/brightness', 20)
     conf_hass_host = config.get('home_assistant/host', 'localhost')
+    conf_hass_ssl = config.get('home_assistant/ssl', False)
     conf_hass_port = config.get('home_assistant/port', 8123)
     conf_hass_pw = config.get('home_assistant/api_password')
 
@@ -55,7 +56,7 @@ async def main(loop, config):
         return False
 
     deck = decks[0]
-    hass = HomeAssistantWS(host=conf_hass_host, port=conf_hass_port)
+    hass = HomeAssistantWS(ssl=conf_hass_ssl, host=conf_hass_host, port=conf_hass_port)
 
     tiles = dict()
     pages = dict()

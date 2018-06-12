@@ -13,9 +13,10 @@ import collections
 
 
 class HomeAssistantWS(object):
-    def __init__(self, host, port=None, loop=None):
+    def __init__(self, host, ssl=False, port=None, loop=None):
         self._host = host
         self._port = port or 8123
+        self._protocol = ('https' if ssl else 'http')
         self._loop = loop or asyncio.get_event_loop()
 
         self._id = itertools.count(start=1, step=1)
@@ -80,7 +81,7 @@ class HomeAssistantWS(object):
         self._entity_states[entity_id] = data['new_state']
 
     async def connect(self, api_password=None):
-        self._websocket = await aiohttp.ClientSession().ws_connect('http://{}:{}/api/websocket'.format(self._host, self._port))
+        self._websocket = await aiohttp.ClientSession().ws_connect('{}://{}:{}/api/websocket'.format(self._protocol, self._host, self._port))
         self._loop.create_task(self._receiver())
 
         if api_password is not None:
