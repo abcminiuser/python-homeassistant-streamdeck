@@ -10,6 +10,7 @@ import aiohttp
 import json
 import itertools
 import collections
+import logging
 
 
 class HomeAssistantWS(object):
@@ -43,6 +44,10 @@ class HomeAssistantWS(object):
                 continue
 
             message_type = message.get('type')
+            logging.debug(message)
+            if message_type == 'auth_invalid':
+                raise RuntimeError("Home Assistant auth failed. {}".format(message))
+            logging.info("Message type = {}".format(message_type))
             if message_type == 'event':
                 event_type = message['event']['event_type']
                 event_data = message['event']['data']
