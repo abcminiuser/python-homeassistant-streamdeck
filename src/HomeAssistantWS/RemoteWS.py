@@ -10,6 +10,7 @@ import aiohttp
 import json
 import itertools
 import collections
+import logging
 
 
 class HomeAssistantWS(object):
@@ -26,6 +27,7 @@ class HomeAssistantWS(object):
         self._entity_states = dict()
 
     async def _send_message(self, message):
+        logging.debug("Sending: {}".format(message))
         message_id = next(self._id)
 
         response_future = asyncio.Future(loop=self._loop)
@@ -39,10 +41,15 @@ class HomeAssistantWS(object):
     async def _receiver(self):
         async for message in self._websocket:
             message = json.loads(message.data) if message.type == aiohttp.WSMsgType.TEXT else None
+            logging.debug("Recieved: {}".format(message))
+
             if message is None:
                 continue
 
             message_type = message.get('type')
+
+            if message_type == 'auth_invalid':
+                raise RuntimeError("Home Assistant auth failed. {}".format(message))
             if message_type == 'event':
                 event_type = message['event']['event_type']
                 event_data = message['event']['data']
@@ -59,6 +66,8 @@ class HomeAssistantWS(object):
                 if future is not None:
                     future.set_result((request_succcess, request_result))
                     del self._message_responses[request_id]
+            else:
+                logging.warning("Unrecognised message type: {}".format(message))
 
     async def _update_all_states(self):
         def _got_states(future):
