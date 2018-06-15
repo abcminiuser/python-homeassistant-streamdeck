@@ -33,7 +33,8 @@ class HomeAssistantWS(object):
         response_future = asyncio.Future(loop=self._loop)
         self._message_responses[message_id] = response_future
 
-        message['id'] = message_id
+        if message['type'] != 'auth':
+            message['id'] = message_id
         await self._websocket.send_str(json.dumps(message))
 
         return response_future
