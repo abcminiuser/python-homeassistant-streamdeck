@@ -19,6 +19,9 @@ class TileManager(object):
         self.empty_tile = BaseTile(deck)
         self.current_page = pages.get('home')
 
+        if self.current_page is None:
+            raise KeyError('Deck page configuration must have a default "home" page.')
+
         self._executor = ThreadPoolExecutor(max_workers=1)
 
     async def set_deck_page(self, name):
