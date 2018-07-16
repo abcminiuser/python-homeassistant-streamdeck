@@ -44,7 +44,7 @@ class HomeAssistantWS(object):
     async def _receiver(self):
         async for message in self._websocket:
             message = json.loads(message.data) if message.type == aiohttp.WSMsgType.TEXT else None
-            logging.debug("Recieved: {}".format(message))
+            logging.debug("Received: {}".format(message))
 
             if message is None:
                 continue
@@ -99,7 +99,7 @@ class HomeAssistantWS(object):
         self._loop.create_task(self._receiver())
 
         if api_password is not None:
-            # First request should be the API password, if provided
+            # First request must be the API password, if provided
             message = {'type': 'auth', 'api_password': api_password}
             await self._send_message(message)
 
