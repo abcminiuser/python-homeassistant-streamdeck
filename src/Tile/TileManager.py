@@ -7,7 +7,6 @@
 
 from .Tile import BaseTile
 
-import queue
 from concurrent.futures import ThreadPoolExecutor
 
 class TileManager(object):

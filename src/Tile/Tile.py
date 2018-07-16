@@ -7,9 +7,6 @@
 
 from .TileImage import TileImage
 
-import copy
-
-
 class BaseTile(object):
     def __init__(self, deck, state_tiles=None, name=None):
         image_format = deck.key_image_format()
@@ -28,7 +25,11 @@ class BaseTile(object):
 
     async def get_image(self, force=True):
         state = await self.state
-        if state == self.old_state and not force:
+
+        # Unless we're being forced to draw, only redraw if the tiles' actual
+        # state values have changed (as opposed to the full entity state which
+        # includes properties such as last update time)
+        if (state and self.old_state) and state.get('state') == self.old_state.get('state') and not force:
             return None
         self.old_state = state
 

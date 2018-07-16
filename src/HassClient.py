@@ -105,6 +105,10 @@ async def main(loop, config):
     tile_manager = TileManager(deck, pages)
 
     async def hass_state_changed(data):
+        # Ignore entity updates that aren't tied to the currently shown deck page
+        if data['entity_id'] not in [tile.entity_id for pos, tile in tile_manager.current_page.items()]:
+            return
+
         await tile_manager.update_page(force_redraw=False)
 
     async def steamdeck_key_state_changed(deck, key, state):
