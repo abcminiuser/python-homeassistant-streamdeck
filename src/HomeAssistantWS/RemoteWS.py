@@ -33,8 +33,10 @@ class HomeAssistantWS(object):
         response_future = asyncio.Future(loop=self._loop)
         self._message_responses[message_id] = response_future
 
+        # All messages other than the initial auth require an ID to be valid
         if message['type'] != 'auth':
             message['id'] = message_id
+
         await self._websocket.send_str(json.dumps(message))
 
         return response_future
@@ -51,7 +53,9 @@ class HomeAssistantWS(object):
 
             if message_type == 'auth_invalid':
                 raise RuntimeError("Home Assistant auth failed. {}".format(message))
-            if message_type == 'event':
+            elif message_type == 'auth_ok':
+                pass
+            elif message_type == 'event':
                 event_type = message['event']['event_type']
                 event_data = message['event']['data']
 
