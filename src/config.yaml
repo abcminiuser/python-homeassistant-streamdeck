@@ -71,6 +71,7 @@ tiles:
         label: '{name}'
         label_font: Assets/Fonts/Roboto-Bold.ttf
         label_size: 12
+        overlay: 'Assets/Images/page.png'
 
 screens:
   - name: "home"

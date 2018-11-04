@@ -34,13 +34,11 @@ class TileManager(object):
             for x in range(cols):
                 tile = self.current_page.get((x, y), self.empty_tile)
 
-                if tile:
-                    button_image = await tile.get_image(force=force_redraw)
-                else:
-                    button_image = self.empty_tile
-
+                button_image = await tile.get_image(force=force_redraw)
                 button_index = (y * cols) + x
-                self._executor.submit(self.deck.set_key_image, key=button_index, image=button_image)
+
+                if button_image:
+                    self._executor.submit(self.deck.set_key_image, key=button_index, image=button_image)
 
     async def button_state_changed(self, key, state):
         rows, cols = self.key_layout

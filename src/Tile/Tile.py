@@ -33,7 +33,7 @@ class BaseTile(object):
         self.old_state = state
 
         if self.tile_class is None:
-            return None
+            return self.image_tile
 
         state_tile = self.tile_class['states'].get(state) or self.tile_class['states'].get(None) or {}
 
