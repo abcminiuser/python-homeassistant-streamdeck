@@ -25,7 +25,7 @@ everything can be heavily improved. If you know asyncio, please submit patches
 to help me out!
 
 Nothing is robust yet, and the configuration format used in the `config.yaml`
-file is not yet documented. Multiple pages are not yet supported.
+file is not yet documented.
 
 ## Dependencies:
 
