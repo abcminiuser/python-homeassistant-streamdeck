@@ -10,7 +10,7 @@ import threading
 
 class DeviceManager(object):
     """
-    Central device manager, to enumerate any attached StremDeck devices. An
+    Central device manager, to enumerate any attached StreamDeck devices. An
     instance of this class must be created in order to detect and use any
     StreamDeck devices.
     """
@@ -104,7 +104,7 @@ class StreamDeck(object):
             except ValueError:
                 self.read_thread_run = False
 
-            if payload:
+            if len(payload):
                 new_key_states = [bool(s) for s in payload[1:]]
 
                 if self.key_callback is not None:
