@@ -33,14 +33,14 @@ class TileManager(object):
         for y in range(rows):
             for x in range(cols):
                 tile = self.current_page.get((x, y), self.empty_tile)
-                if tile is None:
-                    continue
 
-                button_image = await tile.get_image(force=force_redraw)
-                if button_image is not None:
-                    button_index = (y * cols) + x
+                if tile:
+                    button_image = await tile.get_image(force=force_redraw)
+                else:
+                    button_image = self.empty_tile
 
-                    self._executor.submit(self.deck.set_key_image, key=button_index, image=button_image)
+                button_index = (y * cols) + x
+                self._executor.submit(self.deck.set_key_image, key=button_index, image=button_image)
 
     async def button_state_changed(self, key, state):
         rows, cols = self.key_layout
@@ -48,4 +48,4 @@ class TileManager(object):
         x, y = (key % cols, key // cols)
         tile = self.current_page.get((x, y))
         if tile is not None:
-            await tile.button_state_changed(state)
+            await tile.button_state_changed(self, state)

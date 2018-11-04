@@ -64,50 +64,69 @@ tiles:
         overlay: 'Assets/Images/sensor.png'
     action: ~
 
+  - type: "page"
+    class: 'PageTile'
+    states:
+      - state: ~
+        label: '{name}'
+        label_font: Assets/Fonts/Roboto-Bold.ttf
+        label_size: 12
+
 screens:
   - name: "home"
     tiles:
       - position: [0, 0]
         type: "light"
         name: "Study"
-        entity_name: "group.study_lights"
+        entity_id: "group.study_lights"
       - position: [0, 1]
         type: "scene"
         name: "Normal"
-        entity_name: "automation.bender_pausedstopped"
+        entity_id: "automation.bender_pausedstopped"
       - position: [1, 1]
         type: "scene"
         name: "Dim"
-        entity_name: "automation.bender_playing"
+        entity_id: "automation.bender_playing"
       - position: [0, 2]
         type: "light"
         name: "Mr Ed"
-        entity_name: "light.mr_ed"
+        entity_id: "light.mr_ed"
       - position: [1, 2]
         type: "light"
         name: "Desk Lamp"
-        entity_name: "light.desk_lamp"
+        entity_id: "light.desk_lamp"
       - position: [2, 2]
         type: "light"
         name: "Study Bias"
-        entity_name: "light.study_bias"
+        entity_id: "light.study_bias"
       - position: [4, 2]
         type: "automation"
         name: "Auto Dim"
-        entity_name: "group.study_automations"
+        entity_id: "group.study_automations"
       - position: [4, 0]
-        type: "temperature"
-        name: "Study"
-        entity_name: "sensor.study_temperature"
+        type: "page"
+        name: "Sensors"
+        page: "sensors"
+
+  - name: "sensors"
+    tiles:
+      - position: [4, 0]
+        type: "page"
+        name: "Home"
+        page: ~
       - position: [3, 0]
         type: "temperature"
-        name: "Living Room"
-        entity_name: "sensor.living_room_temperature"
+        name: "Study"
+        entity_id: "sensor.study_temperature"
       - position: [2, 0]
         type: "temperature"
-        name: "Bedroom"
-        entity_name: "sensor.bedroom_temperature"
+        name: "Living Room"
+        entity_id: "sensor.living_room_temperature"
       - position: [1, 0]
         type: "temperature"
+        name: "Bedroom"
+        entity_id: "sensor.bedroom_temperature"
+      - position: [0, 0]
+        type: "temperature"
         name: "Server"
-        entity_name: "sensor.server_closet_temperature"
+        entity_id: "sensor.server_closet_temperature"

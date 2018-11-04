@@ -8,35 +8,36 @@
 from .TileImage import TileImage
 
 class BaseTile(object):
-    def __init__(self, deck, state_tiles=None, name=None):
+    def __init__(self, deck, hass=None, tile_class=None, tile_info=None):
         image_format = deck.key_image_format()
         image_dimensions = (image_format['width'], image_format['height'])
 
         self.deck = deck
-        self.state_tiles = state_tiles or {}
-        self.name = name
+        self.hass = hass
+        self.tile_class = tile_class
+        self.tile_info = tile_info
 
         self.image_tile = TileImage(dimensions=image_dimensions)
         self.old_state = None
 
     @property
     async def state(self):
-        return {'state' : None}
+        return None
 
     async def get_image(self, force=True):
         state = await self.state
 
-        # Unless we're being forced to draw, only redraw if the tiles' actual
-        # state values have changed (as opposed to the full entity state which
-        # includes properties such as last update time)
-        if (state and self.old_state) and state.get('state') == self.old_state.get('state') and not force:
+        if state == self.old_state and not force:
             return None
+
         self.old_state = state
 
-        state_tile = self.state_tiles.get(state.get('state'), self.state_tiles.get(None, {}))
+        if self.tile_class is None:
+            return None
 
-        format_dict = state
-        format_dict['name'] = self.name
+        state_tile = self.tile_class['states'].get(state) or self.tile_class['states'].get(None) or {}
+
+        format_dict = {'state': state, **self.tile_info}
 
         image_tile = self.image_tile
         image_tile.color = state_tile.get('color')
@@ -50,28 +51,25 @@ class BaseTile(object):
 
         return image_tile
 
-    async def button_state_changed(self, state):
+    async def button_state_changed(self, tile_manager, state):
         pass
 
 
 class HassTile(BaseTile):
-    def __init__(self, deck, state_tiles, name, hass, entity_id, hass_action):
-        super().__init__(deck, state_tiles, name)
-        self.hass = hass
-        self.entity_id = entity_id
-        self.hass_action = hass_action
+    def __init__(self, deck, hass, tile_class, tile_info):
+        super().__init__(deck, hass, tile_class, tile_info)
 
     @property
     async def state(self):
-        hass_state = await self.hass.get_state(self.entity_id)
-        return hass_state
+        hass_state = await self.hass.get_state(self.tile_info['entity_id'])
+        return hass_state.get('state')
 
-    async def button_state_changed(self, state):
-        if state is not True:
+    async def button_state_changed(self, tile_manager, state):
+        if not state:
             return
 
-        if self.hass_action is not None:
-            action = self.hass_action.split('/')
+        if self.tile_class.get('action') is not None:
+            action = self.tile_class.get('action').split('/')
             if len(action) == 1:
                 domain = 'homeassistant'
                 service = action[0]
@@ -79,4 +77,16 @@ class HassTile(BaseTile):
                 domain = action[0]
                 service = action[1]
 
-            await self.hass.set_state(domain=domain, service=service, entity_id=self.entity_id)
+            await self.hass.set_state(domain=domain, service=service, entity_id=self.tile_info['entity_id'])
+
+
+class PageTile(BaseTile):
+    def __init__(self, deck, hass, tile_class, tile_info):
+        super().__init__(deck, hass, tile_class, tile_info)
+
+    async def button_state_changed(self, tile_manager, state):
+        if not state:
+            return
+
+        page_name = self.tile_info.get('page')
+        await tile_manager.set_deck_page(page_name)

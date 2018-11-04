@@ -64,6 +64,7 @@ async def main(loop, config):
 
     tile_classes = getattr(__import__("Tile"), "Tile")
 
+    # Build dictionary for the tile class templates given in the config file
     conf_tiles = config.get('tiles')
     for conf_tile in conf_tiles:
         conf_tile_type = conf_tile.get('type')
@@ -82,6 +83,7 @@ async def main(loop, config):
             'action': conf_tile_action,
         }
 
+    # Build dictionary of tile pages
     conf_screens = config.get('screens')
     for conf_screen in conf_screens:
         conf_screen_name = conf_screen.get('name')
@@ -91,25 +93,17 @@ async def main(loop, config):
         for conf_screen_tile in conf_screen_tiles:
             conf_screen_tile_pos = conf_screen_tile.get('position')
             conf_screen_tile_type = conf_screen_tile.get('type')
-            conf_screen_tile_name = conf_screen_tile.get('name')
-            conf_screen_tile_entity_name = conf_screen_tile.get('entity_name')
+            conf_screen_tile_class = conf_screen_tile.get('class')
 
-            conf_screen_tile_class = tiles[conf_screen_tile_type]['class']
-            conf_screen_tile_states = tiles[conf_screen_tile_type]['states']
-            conf_screen_tile_action = tiles[conf_screen_tile_type]['action']
+            conf_tile_class_info = tiles.get(conf_screen_tile_type)
 
-            x, y = conf_screen_tile_pos
-            page_tiles[(x, y)] = conf_screen_tile_class(deck, conf_screen_tile_states, conf_screen_tile_name, hass, conf_screen_tile_entity_name, conf_screen_tile_action)
+            page_tiles[tuple(conf_screen_tile_pos)] = conf_tile_class_info['class'](deck=deck, hass=hass, tile_class=conf_tile_class_info, tile_info=conf_screen_tile)
 
         pages[conf_screen_name] = page_tiles
 
     tile_manager = TileManager(deck, pages)
 
     async def hass_state_changed(data):
-        # Ignore entity updates that aren't tied to the currently shown deck page
-        if data['entity_id'] not in [tile.entity_id for pos, tile in tile_manager.current_page.items()]:
-            return
-
         await tile_manager.update_page(force_redraw=False)
 
     async def steamdeck_key_state_changed(deck, key, state):
