@@ -1,11 +1,11 @@
 debug: False
 
 home_assistant:
-  host: 10.0.0.2
+  host: 10.0.0.11
   ssl: False
   port: ~
   api_password: ~
-  api_token: ~
+  api_token: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiI5ODIwNTRlN2NjOWI0ZTFkOTM2NWRjMTdjZjk3MDg0MyIsImlhdCI6MTU0MDcyMDI0OSwiZXhwIjoxODU2MDgwMjQ5fQ.LVZkReSK2vKliQWL6j0JaAKC6M877J_Ybeotzt0j8f8
 
 streamdeck:
   brightness: 20

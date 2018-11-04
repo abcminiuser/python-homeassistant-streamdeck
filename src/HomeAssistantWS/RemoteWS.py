@@ -53,6 +53,8 @@ class HomeAssistantWS(object):
 
             if message_type == 'auth_invalid':
                 raise RuntimeError("Home Assistant auth failed. {}".format(message))
+            elif message_type == 'auth_required':
+                pass
             elif message_type == 'auth_ok':
                 pass
             elif message_type == 'event':
