@@ -5,6 +5,7 @@ home_assistant:
   ssl: False
   port: ~
   api_password: ~
+  api_token: ~
 
 streamdeck:
   brightness: 20

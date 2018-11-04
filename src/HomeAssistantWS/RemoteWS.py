@@ -94,12 +94,15 @@ class HomeAssistantWS(object):
         entity_id = data['entity_id']
         self._entity_states[entity_id] = data['new_state']
 
-    async def connect(self, api_password=None):
+    async def connect(self, api_password=None, api_token=None):
         self._websocket = await aiohttp.ClientSession().ws_connect('{}://{}:{}/api/websocket'.format(self._protocol, self._host, self._port))
         self._loop.create_task(self._receiver())
 
-        if api_password is not None:
-            # First request must be the API password, if provided
+        # First request must be an auth message, if a token or legacy password is provided
+        if api_token is not None:
+            message = {'type': 'auth', 'access_token': api_token}
+            await self._send_message(message)
+        elif api_password is not None:
             message = {'type': 'auth', 'api_password': api_password}
             await self._send_message(message)
 

@@ -49,6 +49,7 @@ async def main(loop, config):
     conf_hass_ssl = config.get('home_assistant/ssl', False)
     conf_hass_port = config.get('home_assistant/port', 8123)
     conf_hass_pw = config.get('home_assistant/api_password')
+    conf_hass_token = config.get('home_assistant/api_token')
 
     decks = DeviceManager().enumerate()
     if not decks:
@@ -115,7 +116,7 @@ async def main(loop, config):
         await tile_manager.button_state_changed(key, state)
 
     logging.info("Connecting to {}:{}...".format(conf_hass_host, conf_hass_port))
-    await hass.connect(api_password=conf_hass_pw)
+    await hass.connect(api_password=conf_hass_pw, api_token=conf_hass_token)
 
     deck.open()
     deck.reset()
