@@ -107,3 +107,7 @@ screens:
         type: "temperature"
         name: "Bedroom"
         entity_name: "sensor.bedroom_temperature"
+      - position: [1, 0]
+        type: "temperature"
+        name: "Server"
+        entity_name: "sensor.server_closet_temperature"
