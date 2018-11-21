@@ -179,10 +179,8 @@ class TileImage(object):
     def __getitem__(self, key):
         if self._pixels is None:
             image = self._get_image()
-            image_data = image.transpose(Image.FLIP_LEFT_RIGHT).getdata()
 
-            self._pixels = []
-            for color in image_data:
-                self._pixels.extend([color[2], color[1], color[0]])
+            r, g, b = image.transpose(Image.FLIP_LEFT_RIGHT).split()
+            self._pixels = Image.merge("RGB", (b, g, r)).tobytes()
 
         return self._pixels[key]
