@@ -7,6 +7,7 @@
 
 from .TileImage import TileImage
 
+
 class BaseTile(object):
     def __init__(self, deck, hass=None, tile_class=None, tile_info=None):
         image_format = deck.key_image_format()

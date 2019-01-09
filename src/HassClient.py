@@ -10,7 +10,6 @@
 from StreamDeck.StreamDeck import DeviceManager
 from HomeAssistantWS.RemoteWS import HomeAssistantWS
 from Tile.TileManager import TileManager
-from Tile.Tile import *
 
 import logging
 import asyncio
@@ -24,7 +23,7 @@ class Config(object):
 
             with open(filename, 'r', encoding='utf-8') as config_file:
                 self.config = yaml.safe_load(config_file)
-        except IOError as e:
+        except IOError:
             logging.error('Failed to read config file "{}"!'.format(filename))
 
             self.config = []
@@ -93,7 +92,6 @@ async def main(loop, config):
         for conf_screen_tile in conf_screen_tiles:
             conf_screen_tile_pos = conf_screen_tile.get('position')
             conf_screen_tile_type = conf_screen_tile.get('type')
-            conf_screen_tile_class = conf_screen_tile.get('class')
 
             conf_tile_class_info = tiles.get(conf_screen_tile_type)
 

@@ -9,6 +9,7 @@ from .Tile import BaseTile
 
 from concurrent.futures import ThreadPoolExecutor
 
+
 class TileManager(object):
     def __init__(self, deck, pages):
         self.deck = deck
