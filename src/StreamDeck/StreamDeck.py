@@ -87,7 +87,7 @@ class StreamDeck(object):
             self._setup_reader(None)
 
             self.device.close()
-        except:
+        except Exception:
             pass
 
     def _read(self):
@@ -277,8 +277,8 @@ class StreamDeck(object):
 
         IMAGE_BYTES_PAGE_1 = 2583 * 3
 
-        payload_1 = bytes(header_1) + image[ : IMAGE_BYTES_PAGE_1]
-        payload_2 = bytes(header_2) + image[IMAGE_BYTES_PAGE_1 : ]
+        payload_1 = bytes(header_1) + image[: IMAGE_BYTES_PAGE_1]
+        payload_2 = bytes(header_2) + image[IMAGE_BYTES_PAGE_1:]
 
         self.device.write(payload_1)
         self.device.write(payload_2)
