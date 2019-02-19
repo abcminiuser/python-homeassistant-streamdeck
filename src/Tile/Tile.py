@@ -10,15 +10,12 @@ from .TileImage import TileImage
 
 class BaseTile(object):
     def __init__(self, deck, hass=None, tile_class=None, tile_info=None):
-        image_format = deck.key_image_format()
-        image_dimensions = (image_format['width'], image_format['height'])
-
         self.deck = deck
         self.hass = hass
         self.tile_class = tile_class
         self.tile_info = tile_info
 
-        self.image_tile = TileImage(dimensions=image_dimensions)
+        self.image_tile = TileImage(image_format=deck.key_image_format())
         self.old_state = None
 
     @property

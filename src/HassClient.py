@@ -7,7 +7,7 @@
 #         www.fourwalledcubicle.com
 #
 
-from StreamDeck.StreamDeck import DeviceManager
+import StreamDeck.DeviceManager as StreamDeck
 from HomeAssistantWS.RemoteWS import HomeAssistantWS
 from Tile.TileManager import TileManager
 
@@ -50,7 +50,7 @@ async def main(loop, config):
     conf_hass_pw = config.get('home_assistant/api_password')
     conf_hass_token = config.get('home_assistant/api_token')
 
-    decks = DeviceManager().enumerate()
+    decks = StreamDeck.DeviceManager().enumerate()
     if not decks:
         logging.error("No StreamDeck found.")
         return False

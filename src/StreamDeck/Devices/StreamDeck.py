@@ -5,72 +5,28 @@
 #         www.fourwalledcubicle.com
 #
 
+from abc import ABC, abstractmethod
+
 import threading
 
 
-class DeviceManager(object):
+class StreamDeck(ABC):
     """
-    Central device manager, to enumerate any attached StreamDeck devices. An
-    instance of this class must be created in order to detect and use any
-    StreamDeck devices.
+    Represents a physically attached original StreamDeck device.
     """
 
-    USB_VID_ELGATO = 0x0fd9
-    USB_PID_STREAMDECK = 0x0060
+    KEY_COUNT = None
+    KEY_COLS = None
+    KEY_ROWS = None
 
-    @staticmethod
-    def _get_transport(transport):
-        """
-        Creates a new HID transport instance from the given transport back-end
-        name.
+    KEY_PIXEL_WIDTH = None
+    KEY_PIXEL_HEIGHT = None
+    KEY_PIXEL_DEPTH = None
+    KEY_PIXEL_ORDER = None
+    KEY_FLIP = None
+    KEY_ROTATION = None
 
-        :param str transport: Name of a supported HID transport back-end to use.
-
-        :rtype: Transport.* instance
-        :return: Instance of a HID Transport class
-        """
-        if transport == "hidapi":
-            from .Transport.HIDAPI import HIDAPI
-            return HIDAPI()
-        else:
-            raise IOError("Invalid HID transport backend \"{}\".".format(transport))
-
-    def __init__(self, transport="hidapi"):
-        """
-        Creates a new StreamDeck DeviceManager, used to detect attached StreamDeck devices.
-
-        :param str transport: name of the the HID transport backend to use
-        """
-        self.transport = self._get_transport(transport)
-
-    def enumerate(self):
-        """
-        Detect attached StreamDeck devices.
-
-        :rtype: list(StreamDeck)
-        :return: list of :class:`StreamDeck` instances, one for each detected device.
-        """
-
-        deck_devices = self.transport.enumerate(
-            vid=self.USB_VID_ELGATO, pid=self.USB_PID_STREAMDECK)
-        return [StreamDeck(d) for d in deck_devices]
-
-
-class StreamDeck(object):
-    """
-    Represents a physically attached StreamDeck device.
-    """
-
-    KEY_COUNT = 15
-    KEY_COLS = 5
-    KEY_ROWS = 3
-
-    KEY_PIXEL_WIDTH = 72
-    KEY_PIXEL_HEIGHT = 72
-    KEY_PIXEL_DEPTH = 3
-    KEY_PIXEL_ORDER = "BGR"
-
-    KEY_IMAGE_SIZE = KEY_PIXEL_WIDTH * KEY_PIXEL_HEIGHT * KEY_PIXEL_DEPTH
+    DECK_TYPE = None
 
     def __init__(self, device):
         self.device = device
@@ -87,7 +43,7 @@ class StreamDeck(object):
             self._setup_reader(None)
 
             self.device.close()
-        except Exception:
+        except (IOError, ValueError):
             pass
 
     def _read(self):
@@ -100,11 +56,11 @@ class StreamDeck(object):
             payload = []
 
             try:
-                payload = self.device.read(17)
-            except ValueError:
+                payload = self.device.read(1 + self.KEY_COUNT)
+            except (IOError, ValueError):
                 self.read_thread_run = False
 
-            if len(payload):
+            if payload:
                 new_key_states = [bool(s) for s in payload[1:]]
 
                 if self.key_callback is not None:
@@ -180,6 +136,15 @@ class StreamDeck(object):
         """
         return self.KEY_COUNT
 
+    def deck_type(self):
+        """
+        Retrieves the model of Stream Deck.
+
+        :rtype: str
+        :return: Text corresponding to the specific type of the device.
+        """
+        return self.DECK_TYPE
+
     def key_layout(self):
         """
         Retrieves the physical button layout on the attached StreamDeck device.
@@ -199,89 +164,17 @@ class StreamDeck(object):
 
         :rtype: dict()
         :return: Dictionary describing the various image parameters
-                 (width, height, pixel depth and RGB order).
+                 (width, height, pixel depth, RGB order, mirroring and
+                 rotation).
         """
         return {
             "width": self.KEY_PIXEL_WIDTH,
             "height": self.KEY_PIXEL_HEIGHT,
             "depth": self.KEY_PIXEL_DEPTH,
             "order": self.KEY_PIXEL_ORDER,
+            "flip": self.KEY_FLIP,
+            "rotation": self.KEY_ROTATION,
         }
-
-    def reset(self):
-        """
-        Resets the StreamDeck, clearing all button images and showing the
-        standby image.
-        """
-
-        payload = bytearray(17)
-        payload[0:2] = [0x0B, 0x63]
-        self.device.write_feature(payload)
-
-    def set_brightness(self, percent):
-        """
-        Sets the global screen brightness of the ScreenDeck, across all the
-        physical buttons.
-
-        :param int/float percent: brightness percent, from [0-100] as an `int`,
-                                  or normalized to [0.0-1.0] as a `float`.
-        """
-
-        if type(percent) is float:
-            percent = int(100.0 * percent)
-
-        percent = min(max(percent, 0), 100)
-
-        payload = bytearray(17)
-        payload[0:6] = [0x05, 0x55, 0xaa, 0xd1, 0x01, percent]
-        self.device.write_feature(payload)
-
-    def set_key_image(self, key, image):
-        """
-        Sets the image of a button on the StremDeck to the given image. The
-        image being set should be in the correct format for the device, as an
-        enumerable collection of pixels.
-
-        .. seealso:: See :func:`~StreamDeck.get_key_image_format` method for
-                     information on the image format accepted by the device.
-
-        :param int key: Index of the button whose image is to be updated.
-        :param enumerable image: Pixel data of the image to set on the button.
-                                 If `None`, the key will be cleared to a black
-                                 color.
-        """
-
-        image = bytes(image or self.KEY_IMAGE_SIZE)
-
-        if min(max(key, 0), self.KEY_COUNT) != key:
-            raise IndexError("Invalid key index {}.".format(key))
-
-        if len(image) != self.KEY_IMAGE_SIZE:
-            raise ValueError("Invalid image size {}.".format(len(image)))
-
-        header_1 = [
-            0x02, 0x01, 0x01, 0x00, 0x00, key + 1, 0x00, 0x00,
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-            0x42, 0x4d, 0xf6, 0x3c, 0x00, 0x00, 0x00, 0x00,
-            0x00, 0x00, 0x36, 0x00, 0x00, 0x00, 0x28, 0x00,
-            0x00, 0x00, 0x48, 0x00, 0x00, 0x00, 0x48, 0x00,
-            0x00, 0x00, 0x01, 0x00, 0x18, 0x00, 0x00, 0x00,
-            0x00, 0x00, 0xc0, 0x3c, 0x00, 0x00, 0xc4, 0x0e,
-            0x00, 0x00, 0xc4, 0x0e, 0x00, 0x00, 0x00, 0x00,
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-        ]
-        header_2 = [
-            0x02, 0x01, 0x02, 0x00, 0x01, key + 1, 0x00, 0x00,
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-        ]
-
-        IMAGE_BYTES_PAGE_1 = 2583 * 3
-
-        payload_1 = bytes(header_1) + image[: IMAGE_BYTES_PAGE_1]
-        payload_2 = bytes(header_2) + image[IMAGE_BYTES_PAGE_1:]
-
-        self.device.write(payload_1)
-        self.device.write(payload_2)
 
     def set_key_callback(self, callback):
         """
@@ -337,3 +230,39 @@ class StreamDeck(object):
                  `False` otherwise).
         """
         return self.last_key_states
+
+    @abstractmethod
+    def reset(self):
+        """
+        Resets the StreamDeck, clearing all button images and showing the
+        standby image.
+        """
+        pass
+
+    @abstractmethod
+    def set_brightness(self, percent):
+        """
+        Sets the global screen brightness of the ScreenDeck, across all the
+        physical buttons.
+
+        :param int/float percent: brightness percent, from [0-100] as an `int`,
+                                  or normalized to [0.0-1.0] as a `float`.
+        """
+        pass
+
+    @abstractmethod
+    def set_key_image(self, key, image):
+        """
+        Sets the image of a button on the StremDeck to the given image. The
+        image being set should be in the correct format for the device, as an
+        enumerable collection of pixels.
+
+        .. seealso:: See :func:`~StreamDeck.get_key_image_format` method for
+                     information on the image format accepted by the device.
+
+        :param int key: Index of the button whose image is to be updated.
+        :param enumerable image: Pixel data of the image to set on the button.
+                                 If `None`, the key will be cleared to a black
+                                 color.
+        """
+        pass

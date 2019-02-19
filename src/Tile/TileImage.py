@@ -9,11 +9,11 @@ from PIL import Image, ImageDraw, ImageFont
 
 
 class TileImage(object):
-    def __init__(self, dimensions=(1, 1)):
+    def __init__(self, image_format):
         self._pixels = None
         self._overlay_image = None
+        self._image_format = image_format
 
-        self.dimensions = dimensions
         self.color = (0, 0, 0)
         self.overlay = None
         self.label = None
@@ -22,10 +22,6 @@ class TileImage(object):
         self.value = None
         self.value_font = None
         self.value_size = None
-
-    @property
-    def dimensions(self):
-        return self._dimensions
 
     @property
     def color(self):
@@ -58,11 +54,6 @@ class TileImage(object):
     @property
     def value_size(self):
         return self._value_size
-
-    @dimensions.setter
-    def dimensions(self, size):
-        self._dimensions = size
-        self._pixels = None
 
     @color.setter
     def color(self, value):
@@ -105,16 +96,16 @@ class TileImage(object):
         self._value_size = size
         self._pixels = None
 
-    def _get_image(self):
-        image = Image.new("RGB", self._dimensions, self._color)
+    def _get_image(self, dimensions):
+        image = Image.new("RGB", dimensions, self._color)
 
         l_x, l_y, l_w, l_h = self._draw_label(image)
         v_x, v_y, v_w, v_h = self._draw_value(image)
 
         o_x = 0
         o_y = (l_y or 0) + (l_h or 0)
-        o_w = self._dimensions[0]
-        o_h = (v_y or self._dimensions[1]) - o_y
+        o_w = dimensions[0]
+        o_h = (v_y or dimensions[1]) - o_y
 
         overlay_pos = (int(o_x), int(o_y))
         overlay_size = (int(o_w), int(o_h))
@@ -178,9 +169,24 @@ class TileImage(object):
 
     def __getitem__(self, key):
         if self._pixels is None:
-            image = self._get_image()
+            dimensions = (self._image_format["width"], self._image_format["height"])
 
-            r, g, b = image.transpose(Image.FLIP_LEFT_RIGHT).split()
-            self._pixels = Image.merge("RGB", (b, g, r)).tobytes()
+            image = self._get_image(dimensions)
+
+            if self._image_format["rotation"]:
+                image = image.rotate(self._image_format["rotation"])
+
+            if self._image_format["flip"][0]:
+                image = image.transpose(Image.FLIP_LEFT_RIGHT)
+
+            if self._image_format["flip"][1]:
+                image = image.transpose(Image.FLIP_TOP_BOTTOM)
+
+            r, g, b = image.split()
+
+            rgb = {"R": r, "G": g, "B": b}
+            rgb_order = self._image_format["order"]
+
+            self._pixels = Image.merge("RGB", (rgb[rgb_order[0]], rgb[rgb_order[1]], rgb[rgb_order[2]])).tobytes()
 
         return self._pixels[key]
