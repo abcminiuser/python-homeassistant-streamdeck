@@ -7,10 +7,10 @@
 #         www.fourwalledcubicle.com
 #
 
-import StreamDeck.DeviceManager as StreamDeck
 from HomeAssistantWS.RemoteWS import HomeAssistantWS
 from Tile.TileManager import TileManager
 
+import StreamDeck.DeviceManager as StreamDeck
 import logging
 import asyncio
 import yaml
@@ -107,7 +107,7 @@ async def main(loop, config):
     async def steamdeck_key_state_changed(deck, key, state):
         await tile_manager.button_state_changed(key, state)
 
-    logging.info("Connecting to {}:{}...".format(conf_hass_host, conf_hass_port))
+    logging.info("Connecting to %s:%s...", conf_hass_host, conf_hass_port)
     await hass.connect(api_password=conf_hass_pw, api_token=conf_hass_token)
 
     deck.open()

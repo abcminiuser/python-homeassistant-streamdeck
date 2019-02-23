@@ -44,6 +44,10 @@ library to interface with the Stream Deck devices.
 
 You will need to have the following additional libraries installed:
 
+StreamDeck, my library to interface to StreamDeck devices:
+```
+pip3 install StreamDeck
+```
 HIDAPI, for USB HID access:
 ```
 pip3 install hidapi
