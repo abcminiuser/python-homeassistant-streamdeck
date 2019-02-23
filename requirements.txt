@@ -1,5 +1,5 @@
-streamdeck==0.2.2
-hidapi==0.7.99.post21
-Pillow==5.0.0
-aiohttp==2.3.9
-PyYAML==3.12
+streamdeck>=0.2.3
+hidapi>=0.7.99.post21
+Pillow>=5.0.0
+aiohttp>=2.3.9
+PyYAML>=3.12

@@ -15,7 +15,7 @@ class BaseTile(object):
         self.tile_class = tile_class
         self.tile_info = tile_info
 
-        self.image_tile = TileImage(image_format=deck.key_image_format())
+        self.image_tile = TileImage(deck)
         self.old_state = None
 
     @property

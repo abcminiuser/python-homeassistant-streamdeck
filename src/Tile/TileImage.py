@@ -6,13 +6,14 @@
 #
 
 from PIL import Image, ImageDraw, ImageFont
+from StreamDeck.ImageHelpers import PILHelper
 
 
 class TileImage(object):
-    def __init__(self, image_format):
+    def __init__(self, deck):
         self._pixels = None
         self._overlay_image = None
-        self._image_format = image_format
+        self._deck = deck
 
         self.color = (0, 0, 0)
         self.overlay = None
@@ -96,23 +97,6 @@ class TileImage(object):
         self._value_size = size
         self._pixels = None
 
-    def _get_image(self, dimensions):
-        image = Image.new("RGB", dimensions, self._color)
-
-        l_x, l_y, l_w, l_h = self._draw_label(image)
-        v_x, v_y, v_w, v_h = self._draw_value(image)
-
-        o_x = 0
-        o_y = (l_y or 0) + (l_h or 0)
-        o_w = dimensions[0]
-        o_h = (v_y or dimensions[1]) - o_y
-
-        overlay_pos = (int(o_x), int(o_y))
-        overlay_size = (int(o_w), int(o_h))
-        self._draw_overlay(image, overlay_pos, overlay_size)
-
-        return image
-
     def _draw_overlay(self, image, pos, max_size):
         if self._overlay is None:
             return
@@ -169,24 +153,20 @@ class TileImage(object):
 
     def __getitem__(self, key):
         if self._pixels is None:
-            dimensions = (self._image_format["width"], self._image_format["height"])
+            image = PILHelper.create_image(self._deck, background=self._color)
 
-            image = self._get_image(dimensions)
+            l_x, l_y, l_w, l_h = self._draw_label(image)
+            v_x, v_y, v_w, v_h = self._draw_value(image)
 
-            if self._image_format["rotation"]:
-                image = image.rotate(self._image_format["rotation"])
+            o_x = 0
+            o_y = (l_y or 0) + (l_h or 0)
+            o_w = image.width
+            o_h = (v_y or image.height) - o_y
 
-            if self._image_format["flip"][0]:
-                image = image.transpose(Image.FLIP_LEFT_RIGHT)
+            overlay_pos = (int(o_x), int(o_y))
+            overlay_size = (int(o_w), int(o_h))
+            self._draw_overlay(image, overlay_pos, overlay_size)
 
-            if self._image_format["flip"][1]:
-                image = image.transpose(Image.FLIP_TOP_BOTTOM)
-
-            r, g, b = image.split()
-
-            rgb = {"R": r, "G": g, "B": b}
-            rgb_order = self._image_format["order"]
-
-            self._pixels = Image.merge("RGB", (rgb[rgb_order[0]], rgb[rgb_order[1]], rgb[rgb_order[2]])).tobytes()
+            self._pixels = PILHelper.to_native_format(self._deck, image)
 
         return self._pixels[key]
