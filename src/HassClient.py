@@ -26,10 +26,10 @@ class Config(object):
         except IOError:
             logging.error('Failed to read config file "{}"!'.format(filename))
 
-            self.config = []
+            self.config = {}
 
     def get(self, path, default=None):
-        value = None
+        value = default
 
         location = self.config
         for fragment in path.split('/'):
@@ -64,7 +64,7 @@ async def main(loop, config):
     tile_classes = getattr(__import__("Tile"), "Tile")
 
     # Build dictionary for the tile class templates given in the config file
-    conf_tiles = config.get('tiles')
+    conf_tiles = config.get('tiles', [])
     for conf_tile in conf_tiles:
         conf_tile_type = conf_tile.get('type')
         conf_tile_class = conf_tile.get('class')
@@ -83,7 +83,7 @@ async def main(loop, config):
         }
 
     # Build dictionary of tile pages
-    conf_screens = config.get('screens')
+    conf_screens = config.get('screens', [])
     for conf_screen in conf_screens:
         conf_screen_name = conf_screen.get('name')
         conf_screen_tiles = conf_screen.get('tiles')
