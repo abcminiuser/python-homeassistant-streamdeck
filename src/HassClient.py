@@ -42,8 +42,45 @@ class Config(object):
         return value
 
 
+class ScreenSaver:
+    def __init__(self, loop, deck, brightness, cb, timeout):
+        self.deck = deck
+        self.brightness = brightness
+        self.cb = cb
+        self.timeout = timeout
+        loop.create_task(self._loop())
+
+    async def _loop(self):
+        await self._set_on()
+        while True:
+            await asyncio.sleep(1)
+            if self.on:
+                self.steps -= 1
+                if self.steps < 0:
+                    await self._set_off()
+
+    async def _set_on(self):
+        self.deck.set_brightness(self.brightness)
+        self.steps = self.timeout
+        self.on = True
+
+    async def _set_off(self):
+        self.deck.set_brightness(0)
+        self.steps = 0
+        self.on = False
+
+    async def buttonpress(self, deck, key, state):
+        if self.on:
+            self.steps = self.timeout
+            await self.cb(deck, key, state)
+        else:
+            if not state:
+                await self._set_on()
+
+
 async def main(loop, config):
     conf_deck_brightness = config.get('streamdeck/brightness', 20)
+    conf_deck_screensaver = config.get('streamdeck/screensaver', 0)
     conf_hass_host = config.get('home_assistant/host', 'localhost')
     conf_hass_ssl = config.get('home_assistant/ssl', False)
     conf_hass_port = config.get('home_assistant/port', 8123)
@@ -112,8 +149,13 @@ async def main(loop, config):
 
     deck.open()
     deck.reset()
-    deck.set_brightness(conf_deck_brightness)
-    deck.set_key_callback_async(steamdeck_key_state_changed)
+
+    if conf_deck_screensaver == 0:
+        deck.set_brightness(conf_deck_brightness)
+        deck.set_key_callback_async(steamdeck_key_state_changed)
+    else:
+        ss = ScreenSaver(loop, deck, conf_deck_brightness, steamdeck_key_state_changed, conf_deck_screensaver)
+        deck.set_key_callback_async(ss.buttonpress)
 
     await tile_manager.set_deck_page(None)
     await hass.subscribe_to_event('state_changed', hass_state_changed)
