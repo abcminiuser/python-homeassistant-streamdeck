@@ -1,16 +1,50 @@
-debug: False
+debug: False # If True, enables debug output messages
 
+#################################################
+### Home Assistant Server Connection Settings ###
+#################################################
 home_assistant:
+  # Hostname or IP address of the HomeAssistant server.
   host: 10.0.0.11
+
+  # True if a SSL connection to the HomeAssistant server should be used,
+  # False for regular HTTP.
   ssl: False
+
+  # Custom port to use to connect to use when connecting to the server,
+  # Set to ~ if default port should be used instead.
   port: ~
+
+  # Legacy password to use to connect to the HomeAssistant server. Newer
+  # versions of HomeAssistant have deprecated this in favour of long-lived
+  # access tokens.
   api_password: ~
+
+  # Long lived access token to use to connect to the HomeAssistant server. See
+  # the Authentication section of the HomeAssistant documentation on how to
+  # create of these for your server.
   api_token: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiI5ODIwNTRlN2NjOWI0ZTFkOTM2NWRjMTdjZjk3MDg0MyIsImlhdCI6MTU0MDcyMDI0OSwiZXhwIjoxODU2MDgwMjQ5fQ.LVZkReSK2vKliQWL6j0JaAKC6M877J_Ybeotzt0j8f8
 
+#################################################
+###     StreamDeck Configuration Settings     ###
+#################################################
 streamdeck:
+  # Brightness percentage of the backlight when in use. Should range from 0 to 100.
   brightness: 20
 
+  # Timeout in seconds before the screen backlight is turned off automatically.
+  # Set to ~ or 0 to keep backlight on indefinitely.
+  screensaver: 10
+
+#################################################
+###        Tile Configuration Settings        ###
+#################################################
 tiles:
+  # Each tile should define how that tile should be rendered when the associated
+  # HomeAssistant entity is in a given state. This allows screens to be defined
+  # as a collection of tiles bound to different entities so that all entities of
+  # the same type (e.g. all lights) are drawn in the same way.
+
   - type: "light"
     class: 'HassTile'
     states:
@@ -73,7 +107,14 @@ tiles:
         label_size: 12
         overlay: 'Assets/Images/page.png'
 
+#################################################
+###    Screen Layout Configuration Settings   ###
+#################################################
 screens:
+  # Each screen consists of one or more tiles of various types, bound to an
+  # entity or page. The "home" page is mandatory, and is the one shown when the
+  # script starts.
+
   - name: "home"
     tiles:
       - position: [0, 0]
