@@ -43,17 +43,27 @@ class Config(object):
 
 
 class ScreenSaver:
-    def __init__(self, loop, deck, brightness, cb, timeout):
+    def __init__(self, loop, deck):
         self.deck = deck
+
+        deck.set_key_callback_async(self._handle_button_press)
+
+    async def start(self, brightness, callback, timeout=0):
         self.brightness = brightness
-        self.cb = cb
+        self.callback = callback
         self.timeout = timeout
+
         loop.create_task(self._loop())
 
     async def _loop(self):
         await self._set_on()
+
+        if self.timeout == 0:
+            return
+
         while True:
             await asyncio.sleep(1)
+
             if self.on:
                 self.steps -= 1
                 if self.steps < 0:
@@ -69,10 +79,10 @@ class ScreenSaver:
         self.steps = 0
         self.on = False
 
-    async def buttonpress(self, deck, key, state):
+    async def _handle_button_press(self, deck, key, state):
         if self.on:
             self.steps = self.timeout
-            await self.cb(deck, key, state)
+            await self.callback(deck, key, state)
         else:
             if not state:
                 await self._set_on()
@@ -150,12 +160,8 @@ async def main(loop, config):
     deck.open()
     deck.reset()
 
-    if conf_deck_screensaver == 0:
-        deck.set_brightness(conf_deck_brightness)
-        deck.set_key_callback_async(steamdeck_key_state_changed)
-    else:
-        ss = ScreenSaver(loop, deck, conf_deck_brightness, steamdeck_key_state_changed, conf_deck_screensaver)
-        deck.set_key_callback_async(ss.buttonpress)
+    screensaver = ScreenSaver(loop=loop, deck=deck)
+    await screensaver.start(brightness=conf_deck_brightness, callback=steamdeck_key_state_changed, timeout=conf_deck_screensaver)
 
     await tile_manager.set_deck_page(None)
     await hass.subscribe_to_event('state_changed', hass_state_changed)
