@@ -31,7 +31,7 @@ file is not yet documented.
 
 ### Python
 
-Python 3.5 or newer is required. On Debian systems, this can usually be
+Python 3.8 or newer is required. On Debian systems, this can usually be
 installed via:
 ```
 sudo apt install python3 python3-pip
@@ -39,65 +39,27 @@ sudo apt install python3 python3-pip
 
 ### Python Libraries
 
-This library uses my own [python-elgato-streamdeck](https://github.com/abcminiuser/python-elgato-streamdeck)
-library to interface with the Stream Deck devices.
+You will need to have the following libraries installed:
 
-You will need to have the following additional libraries installed:
-
-StreamDeck, my library to interface to StreamDeck devices:
+StreamDeck, [my own library](https://github.com/abcminiuser/python-elgato-streamdeck)
+to interface to StreamDeck devices:
 ```
 pip3 install StreamDeck
 ```
-HIDAPI, for USB HID access:
-```
-pip3 install hidapi
-```
+
 Pillow, the Python Image Library (PIL) fork, for dynamic tile image creation:
 ```
 pip3 install pillow
 ```
+
 aiohttp, for Websocket communication with Home Assistant:
 ```
 pip3 install aiohttp
 ```
+
 PyYAML, for configuration file parsing:
 ```
 pip3 install pyyaml
-```
-
-## Raspberry Pi Installation:
-
-The following script has been verified working on a Raspberry Pi (Model 2 B)
-running a stock Debian Stretch image, to install all the required dependencies
-needed by this project:
-
-```
-# Ensure system is up to date, upgrade all out of date packages
-sudo apt update && sudo apt dist-upgrade -y
-
-# Install the pip Python package manager
-sudo apt install -y python3-pip
-
-# Install system packages needed for the Python hidapi package
-sudo apt install -y libudev-dev libusb-1.0-0-dev
-
-# Install system packages needed for the Python pillow package
-sudo apt install -y python-pil
-
-# Install dependencies
-pip3 install pillow
-pip3 install aiohttp
-pip3 install pyyaml
-pip3 install hidapi
-
-# Add udev rule to allow all users non-root access to Elgato StreamDeck devices:
-sudo tee /etc/udev/rules.d/10-streamdeck.rules << EOF
-	SUBSYSTEMS=="usb", ATTRS{idVendor}=="0fd9", ATTRS{idProduct}=="0060", GROUP="users"
-	EOF
-
-# Install git and check out the repository
-sudo apt install -y git
-git clone https://github.com/abcminiuser/python-homeassistant-streamdeck.git
 ```
 
 ## License:

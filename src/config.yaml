@@ -34,7 +34,7 @@ streamdeck:
 
   # Timeout in seconds before the screen backlight is turned off automatically.
   # Set to ~ or 0 to keep backlight on indefinitely.
-  screensaver: 10
+  screensaver: ~
 
 #################################################
 ###        Tile Configuration Settings        ###
