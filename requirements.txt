@@ -1,4 +1,4 @@
-streamdeck>=0.7.3
+streamdeck>=0.8.0
 Pillow>=7.1.0
 aiohttp>=3.6.2
 PyYAML>=5.3.1
